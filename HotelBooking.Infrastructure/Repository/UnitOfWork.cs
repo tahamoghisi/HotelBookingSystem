@@ -33,6 +33,8 @@ namespace HotelBooking.Infrastructure.Repository
 
         public IBookingRepository Bookings { get; }
 
+        public IUserRepository User { get; }
+
         public void Dispose()
         {
             _dbContext.Dispose();

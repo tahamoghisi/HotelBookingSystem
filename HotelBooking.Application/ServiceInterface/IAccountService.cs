@@ -1,4 +1,5 @@
-﻿using HotelBooking.Application.DTOs.User;
+﻿using HotelBooking.Application.DTOs.Auth;
+using HotelBooking.Application.DTOs.User;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,5 +11,6 @@ namespace HotelBooking.Domain.Interfaces
     public interface IAccountService
     {
         Task<bool> Register(RegisterDto registerDto);
+        Task<LoginResponse> LoginAsync(LoginRequest loginRequest);
     }
 }
