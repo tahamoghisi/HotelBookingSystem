@@ -7,9 +7,11 @@ using System.Threading.Tasks;
 
 namespace HotelBooking.Domain.Interfaces
 {
-    public interface IUserRepository
+    public interface IUserRepository : IGenericRepositoy<User>
     {
         Task<User?> GetByUsernameAndPassword(string username , string passsword);
         Task<User?> GetByUserId(int userId);
+        Task<bool> ExistByUsername(string username);
+
     }
 }

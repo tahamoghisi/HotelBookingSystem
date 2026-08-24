@@ -9,12 +9,18 @@ using System.Threading.Tasks;
 
 namespace HotelBooking.Infrastructure.Repository
 {
-    public class UserRepository : IUserRepository
+    public class UserRepository : GenericRepository<User> , IUserRepository
     {
         private readonly ApplicationDBContext _context;
-        public UserRepository(ApplicationDBContext context)
+        public UserRepository(ApplicationDBContext context) : base(context)
         {
             _context = context;
+        }
+
+        public async Task<bool> ExistByUsername(string username)
+        {
+            var isExist = await _context.Users.AnyAsync(u => u.UserName == username);
+            return isExist;
         }
 
         public async Task<User?> GetByUserId(int userId)

@@ -8,9 +8,10 @@ using System.Threading.Tasks;
 
 namespace HotelBooking.Domain.Interfaces
 {
-    public interface IAccountService
+    public interface IAuthService
     {
         Task<bool> Register(RegisterDto registerDto);
         Task<LoginResponse> LoginAsync(LoginRequest loginRequest);
+        Task<RegisterResponse> RegisterAsync(RegisterRequest registerRequest);
     }
 }

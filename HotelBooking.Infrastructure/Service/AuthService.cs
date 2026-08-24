@@ -11,12 +11,12 @@ using System.Threading.Tasks;
 
 namespace HotelBooking.Infrastructure.Service
 {
-    public class AccountService : IAccountService
+    public class AuthService : IAuthService
     {
         private readonly IAccountRepository _accountRepository;
         private readonly IUserRepository _userRepository;
         private readonly IJWTService _jwtService;
-        public AccountService(IAccountRepository accountRepository, IUserRepository userRepository, IJWTService jwtService)
+        public AuthService(IAccountRepository accountRepository, IUserRepository userRepository, IJWTService jwtService)
         {
             _accountRepository = accountRepository;
             _userRepository = userRepository;
@@ -48,6 +48,25 @@ namespace HotelBooking.Infrastructure.Service
                 if (check == false) return false;
                 return true;
             }   
+        }
+
+        public async Task<RegisterResponse> RegisterAsync(RegisterRequest registerRequest)
+        {
+            var isExist = await _userRepository.ExistByUsername(registerRequest.Username);
+            if (isExist == false) throw new Exception("UserName is already Exist");
+            var user = new User
+            {
+                UserName = registerRequest.Username,
+                Password = registerRequest.Password,
+                Role = "User"
+                //email , phoneNumber , nationalCode
+            };
+            var token = _jwtService.GenerateToken(user);
+            return new RegisterResponse
+            {
+                AccessToken = token,
+                ExpiresAt = DateTime.UtcNow.AddMinutes(15)
+            };
         }
     }
 }
