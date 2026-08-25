@@ -10,7 +10,7 @@ namespace HotelBooking.Domain.Interfaces
 {
     public interface IAuthService
     {
-        Task<bool> Register(RegisterDto registerDto);
+        //Task<bool> Register(RegisterDto registerDto);
         Task<LoginResponse> LoginAsync(LoginRequest loginRequest);
         Task<RegisterResponse> RegisterAsync(RegisterRequest registerRequest);
     }

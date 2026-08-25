@@ -1,4 +1,5 @@
-﻿using HotelBooking.Domain.Entities;
+﻿using HotelBooking.Application.DTOs.Auth;
+using HotelBooking.Domain.Entities;
 using HotelBooking.Domain.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
@@ -19,7 +20,7 @@ namespace HotelBooking.Application.ServiceInterface
         {
             this.configuration = configuration;
         }
-        public string GenerateToken(User user)
+        public ResultToken GenerateToken(User user)
         {
             var claim = new List<Claim>
             {
@@ -39,7 +40,12 @@ namespace HotelBooking.Application.ServiceInterface
                 claims: claim,
                 expires: expires,
                 signingCredentials: credential);
-            return new JwtSecurityTokenHandler().WriteToken(token);
+            var accessToken = new JwtSecurityTokenHandler().WriteToken(token);
+            return new ResultToken
+            {
+                AccessToken = accessToken,
+                ExpiresAt = expires
+            };
         }
     }
 }

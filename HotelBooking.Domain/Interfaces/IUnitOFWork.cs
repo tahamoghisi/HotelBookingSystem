@@ -15,5 +15,6 @@ namespace HotelBooking.Domain.Interfaces
         IUserRepository User { get; }
 
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
+        void Dispose();
     }
 }

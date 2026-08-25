@@ -13,47 +13,44 @@ namespace HotelBooking.Infrastructure.Service
 {
     public class AuthService : IAuthService
     {
-        private readonly IAccountRepository _accountRepository;
-        private readonly IUserRepository _userRepository;
         private readonly IJWTService _jwtService;
-        public AuthService(IAccountRepository accountRepository, IUserRepository userRepository, IJWTService jwtService)
+        private readonly IUnitOFWork _unitOFWork;
+        public AuthService(IJWTService jwtService,IUnitOFWork unitOFWork)
         {
-            _accountRepository = accountRepository;
-            _userRepository = userRepository;
+            _unitOFWork = unitOFWork;
             _jwtService = jwtService;
         }
 
         public async Task<LoginResponse> LoginAsync(LoginRequest loginRequest)
         {
-            var user = await _userRepository.GetByUsernameAndPassword(loginRequest.userName , loginRequest.password);
+            var user = await _unitOFWork.User.GetByUsernameAndPassword(loginRequest.userName , loginRequest.password);
             if (user == null) throw new Exception("UserName or Password is incorrect");
             var token = _jwtService.GenerateToken(user);
             return new LoginResponse
             {
-                AccessToken = token,
-                ExpiresAt = DateTime.UtcNow.AddMinutes(15)
+                AccessToken = token.AccessToken,
+                ExpiresAt = token.ExpiresAt
             };
         }
-
-        public async Task<bool> Register(RegisterDto registerDto)
-        {
-            if (registerDto == null)
-            {
-                return false;
-            }
-            else
-            {
-                var user = UserMapping.ToEntity(registerDto);
-                var check = await _accountRepository.Register(user);
-                if (check == false) return false;
-                return true;
-            }   
-        }
+        //public async Task<bool> Register(RegisterDto registerDto)
+        //{
+        //    if (registerDto == null)
+        //    {
+        //        return false;
+        //    }
+        //    else
+        //    {
+        //        var user = UserMapping.ToEntity(registerDto);
+        //        var check = await _accountRepository.Register(user);
+        //        if (check == false) return false;
+        //        return true;
+        //    }   
+        //}
 
         public async Task<RegisterResponse> RegisterAsync(RegisterRequest registerRequest)
         {
-            var isExist = await _userRepository.ExistByUsername(registerRequest.Username);
-            if (isExist == false) throw new Exception("UserName is already Exist");
+            var isExist = await _unitOFWork.User.ExistByUsername(registerRequest.Username);
+            if (isExist) throw new Exception("UserName is already Exist");
             var user = new User
             {
                 UserName = registerRequest.Username,
@@ -61,11 +58,13 @@ namespace HotelBooking.Infrastructure.Service
                 Role = "User"
                 //email , phoneNumber , nationalCode
             };
+            await _unitOFWork.User.AddAsync(user);
+            await _unitOFWork.SaveChangesAsync();
             var token = _jwtService.GenerateToken(user);
             return new RegisterResponse
             {
-                AccessToken = token,
-                ExpiresAt = DateTime.UtcNow.AddMinutes(15)
+                AccessToken = token.AccessToken,
+                ExpiresAt = token.ExpiresAt
             };
         }
     }
