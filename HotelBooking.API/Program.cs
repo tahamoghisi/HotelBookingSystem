@@ -27,6 +27,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped(typeof(IGenericRepositoy<>), typeof(GenericRepository<>));
 builder.Services.AddScoped<IJWTService, JWTService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IPasswordHasher,PasswordHasher>();
 
 // Unit of Work
 builder.Services.AddScoped<IUnitOFWork, UnitOfWork>();
@@ -65,6 +66,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseAuthentication();
 
 app.UseAuthorization();
 

@@ -15,8 +15,10 @@ namespace HotelBooking.Infrastructure.Service
     {
         private readonly IJWTService _jwtService;
         private readonly IUnitOFWork _unitOFWork;
-        public AuthService(IJWTService jwtService,IUnitOFWork unitOFWork)
+        private readonly IPasswordHasher _passwordHasher; 
+        public AuthService(IJWTService jwtService,IUnitOFWork unitOFWork,IPasswordHasher passwordHasher)
         {
+            _passwordHasher = passwordHasher;
             _unitOFWork = unitOFWork;
             _jwtService = jwtService;
         }
@@ -51,10 +53,11 @@ namespace HotelBooking.Infrastructure.Service
         {
             var isExist = await _unitOFWork.User.ExistByUsername(registerRequest.Username);
             if (isExist) throw new Exception("UserName is already Exist");
+            var passwordHash = _passwordHasher.Hash(registerRequest.Password);
             var user = new User
             {
                 UserName = registerRequest.Username,
-                Password = registerRequest.Password,
+                Password = passwordHash,
                 Role = "User"
                 //email , phoneNumber , nationalCode
             };
