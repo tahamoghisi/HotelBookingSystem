@@ -5,7 +5,9 @@ using HotelBooking.Infrastructure.Repository;
 using HotelBooking.Infrastructure.Service;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
 using System.Reflection;
 using System.Text;
 
@@ -14,14 +16,27 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(s =>
+builder.Services.AddSwaggerGen(options =>
 {
-    s.SwaggerDoc("v1", new Microsoft.OpenApi.OpenApiInfo()
+    options.SwaggerDoc("v1", new OpenApiInfo()
     {
         Title = "HotelBookingSystem",
         Version = "v1"
     });
+    options.AddSecurityDefinition("bearer", new OpenApiSecurityScheme
+    {
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        Description = "JWT Authorization header using the Bearer scheme."
+    });
+
+    options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+    {
+        [new OpenApiSecuritySchemeReference("bearer", document)] = []
+    });
 });
+
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 //builder.Services.AddOpenApi();
 
