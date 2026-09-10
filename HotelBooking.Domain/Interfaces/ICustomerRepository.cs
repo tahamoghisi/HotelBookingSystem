@@ -13,5 +13,7 @@ namespace HotelBooking.Domain.Interfaces
         Task<Customer?> GetByNationalCodeAsync(string nationalCode);
         Task<bool> ExistsByEmailAsync(string email);
         Task<bool> ExistsByNationalCodeAsync(string nationalCode);
+        Task<Customer?> GetCustomerWithBookingsAsync(int customerId);
+        Task<IEnumerable<Customer>> SearchCustomersAsync(string? name, string? email);
     }
 }

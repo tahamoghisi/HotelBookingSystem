@@ -17,6 +17,12 @@ namespace HotelBooking.Infrastructure.Repository
         {
             _dbContext = dbContext;
         }
+
+        public async Task<bool> ExistsByNameAsync(string name)
+        {
+            return await _dbContext.Hotels.AnyAsync(h => h.Name == name);
+        }
+
         public async Task<IEnumerable<Hotel>> GetActiveHotelsAsync()
         {
             return await _dbContext.Hotels
@@ -43,6 +49,18 @@ namespace HotelBooking.Infrastructure.Repository
                 .Where(h => h.StarRating == starRating).ToListAsync();
         }
 
+        public async Task<IEnumerable<Hotel>> GetHotelsWithAvailableRoomsAsync(DateTime checkIn, DateTime checkOut)
+        {
+            return await _dbContext.Hotels
+                    .Where(h => h.Rooms.Any(r =>
+                        !r.Bookings.Any(b =>
+                            checkIn < b.CheckOutDate &&
+                            checkOut > b.CheckInDate
+                        )
+                    ))
+                    .ToListAsync();
+        }
+
         public async Task<Hotel?> GetHotelWithRoomsAsync(int hotelId)
         {
             return await _dbContext.Hotels
@@ -56,7 +74,7 @@ namespace HotelBooking.Infrastructure.Repository
 
             if (!string.IsNullOrWhiteSpace(city))
             {
-                query =  query.Where(h => h.City.Contains(city));
+                query = query.Where(h => h.City.Contains(city));
             }
 
             if (minStarRating.HasValue)
@@ -73,6 +91,25 @@ namespace HotelBooking.Infrastructure.Repository
                 .OrderByDescending(h => h.StarRating)
                 .ThenBy(h => h.Name)
                 .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Hotel>> SearchHotelsAsync(string? name, string? city, int? minStars)
+        {
+            var query = _dbContext.Hotels.Where(h => h.IsActive == true);
+            if (!string.IsNullOrWhiteSpace(city))
+            {
+                query = query.Where(h => h.City.Contains(city));
+            }
+
+            if (minStars.HasValue)
+            {
+                query = query.Where(h => h.StarRating >= minStars.Value);
+            }
+            if (!string.IsNullOrWhiteSpace(name))
+            {
+                query = query.Where(h => h.Name == name);
+            }
+            return await query.ToListAsync();
         }
     }
 }

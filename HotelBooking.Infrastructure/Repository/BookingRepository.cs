@@ -68,13 +68,14 @@ namespace HotelBooking.Infrastructure.Repository
                 .OrderByDescending(b => b.CheckOutDate)
                 .ToListAsync();
         }
+        //true یعنی رزرو متداخل وجود دارد
+        //false یعنی رزرو متداخلی وجود ندارد
 
-        public async Task<bool> IsRoomBookedAsync(int roomId, DateTime checkIn, DateTime checkOut)
+        public async Task<bool> IsRoomAvailableAsync(int roomId, DateTime checkIn, DateTime checkOut)
         {
             return await _dbContext.Bookings
-                .AnyAsync(x => x.RoomId == roomId
-                && x.CheckInDate == checkIn
-                && x.CheckOutDate == checkOut);
+                .AnyAsync(x => x.RoomId == roomId &&
+               checkIn < x.CheckOutDate && checkOut > x.CheckInDate);
         }
     }
 }

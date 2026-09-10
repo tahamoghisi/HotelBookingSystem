@@ -39,5 +39,25 @@ namespace HotelBooking.Infrastructure.Repository
             return await _dbContext.Customers
                             .FirstOrDefaultAsync(x => x.NationalCode == nationalCode);
         }
+
+        public async Task<Customer?> GetCustomerWithBookingsAsync(int customerId)
+        {
+            return await _dbContext.Customers.Include(c => c.Bookings)
+                .FirstOrDefaultAsync(x => x.Id == customerId);
+        }
+
+        public async Task<IEnumerable<Customer>> SearchCustomersAsync(string? name, string? email)
+        {
+            var query = _dbContext.Customers.AsQueryable();
+            if (!string.IsNullOrWhiteSpace(name))
+            {
+                query =query.Where(c => c.FuullName == name);
+            }
+            if (!string.IsNullOrWhiteSpace(email))
+            {
+                query = query.Where(c => c.Email == email);
+            }
+            return await query.ToListAsync();
+        }
     }
 }
