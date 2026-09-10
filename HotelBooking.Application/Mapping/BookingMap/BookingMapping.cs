@@ -42,7 +42,7 @@ namespace HotelBooking.Application.Mapping.BookingMap
                 CheckInDate = dto.CheckInDate,
                 CheckOutDate = dto.CheckOutDate,
                 TotalPrice = dto.TotalPrice,
-                Status = dto.Status
+                //Status = dto.Status
             };
         }
         public static Booking UpdateEntity(UpdateBookingDTO dto)
@@ -54,7 +54,7 @@ namespace HotelBooking.Application.Mapping.BookingMap
                 CheckInDate = dto.CheckInDate,
                 CheckOutDate = dto.CheckOutDate,
                 TotalPrice = dto.TotalPrice,
-                Status = dto.Status,
+                //Status = dto.Status,
                 HotelId = dto.HotelId
             };
         }

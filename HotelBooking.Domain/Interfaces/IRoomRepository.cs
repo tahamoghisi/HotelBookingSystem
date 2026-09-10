@@ -11,7 +11,7 @@ namespace HotelBooking.Domain.Interfaces
     {
         Task<IEnumerable<Room>> GetAviablelRooms();
         Task<Room?> GetByRoomNumberAsync(int roomNumber);
-        Task<bool> IsRoomAvailableAsync(int roomId);
+        Task<bool> IsRoomAvailableAsync(int roomId, DateTime checkIn, DateTime checkOut);
         Task <IEnumerable<Room>> GetRoomsByHotelId(int hotelId);
         Task<IEnumerable<Room>> SearchRoomsAsync(int hotelId,int? capacity,decimal? minPrice,decimal? maxPrice);
         Task<Room?> GetRoomWithBookingsAsync(int roomId);

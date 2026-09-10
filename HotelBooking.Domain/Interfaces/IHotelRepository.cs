@@ -20,4 +20,4 @@ namespace HotelBooking.Domain.Interfaces
         Task<IEnumerable<Hotel>> GetHotelsWithAvailableRoomsAsync(DateTime checkIn,DateTime checkOut);
     }
 }
-}
+

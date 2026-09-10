@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static HotelBooking.Domain.Entities.Booking;
 
 namespace HotelBooking.Infrastructure.Repository
 {
@@ -73,8 +74,9 @@ namespace HotelBooking.Infrastructure.Repository
 
         public async Task<bool> IsRoomAvailableAsync(int roomId, DateTime checkIn, DateTime checkOut)
         {
-            return await _dbContext.Bookings
+            return !await _dbContext.Bookings
                 .AnyAsync(x => x.RoomId == roomId &&
+                x.Status != BookingStatus.Cancelled &&
                checkIn < x.CheckOutDate && checkOut > x.CheckInDate);
         }
     }

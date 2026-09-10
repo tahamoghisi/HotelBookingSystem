@@ -41,12 +41,10 @@ namespace HotelBooking.Infrastructure.Repository
             .FirstOrDefaultAsync(r => r.Id == roomId);
         }
 
-        public async Task<bool> IsRoomAvailableAsync(int roomId)
+        public async Task<bool> IsRoomAvailableAsync(int roomId,DateTime checkIn,DateTime checkOut)
         {
-            var room = await GetByIdAsync(roomId);
-            if (room == null) return false;
-            if (room.IsAvailable == true) return true;
-            return false;
+            return !await _dbContext.Bookings
+                .AnyAsync(b => b.RoomId == roomId && checkIn < b.CheckOutDate && checkOut > b.CheckInDate);
         }
 
         public async Task<IEnumerable<Room>> SearchRoomsAsync(int hotelId, int? capacity, decimal? minPrice, decimal? maxPrice)
