@@ -22,9 +22,9 @@ namespace HotelBooking.Domain.Entities
         public decimal PricePerNight { get; set; }
         [Range(1, 10, ErrorMessage = "ظرفیت باید بین 1 تا 10 نفر باشد")]
         public int Capacity { get; set; } //ظرفیت
-        public bool IsAvailable { get; set; } = true;
         public ICollection<Booking> Bookings { get; set; } = new List<Booking>();
         public Hotel Hotel { get; set; }
+        public RoomStatus Status { get; set; }
 
 
         public enum RoomType
@@ -34,6 +34,13 @@ namespace HotelBooking.Domain.Entities
             Suite = 3,
             Deluxe = 4,
             Presidential = 5
+        }
+        public enum RoomStatus
+        {
+            Available,
+            Reserved,
+            Occupied,
+            Maintenance
         }
     }
 }

@@ -15,6 +15,7 @@ namespace HotelBooking.Domain.Interfaces
         Task<bool> IsRoomAvailableAsync(int roomId, DateTime checkIn, DateTime checkOut);// بررسی اینکه آیا اتاق در بازه زمانی خاص رزرو شده؟
         Task<IEnumerable<Booking>> GetPastBookingsAsync();// دریافت رزروهای گذشته
         Task<Booking?> GetBookingWithDetailsAsync(int id);
+        Task<bool> HasActiveBookingsAsync(int roomId);
 
     }
 }

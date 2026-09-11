@@ -15,6 +15,5 @@ namespace HotelBooking.Application.DTOs.Room
         public RoomType Type { get; set; } // Single, Double, Suite
         public decimal PricePerNight { get; set; }
         public int Capacity { get; set; } //ظرفیت
-        public bool IsAvailable { get; set; } = true;
     }
 }

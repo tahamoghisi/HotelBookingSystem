@@ -4,6 +4,7 @@ using HotelBooking.Application.ServiceInterface;
 using HotelBooking.Domain.Entities;
 using HotelBooking.Domain.Interfaces;
 using HotelBooking.Infrastructure.Repository;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;

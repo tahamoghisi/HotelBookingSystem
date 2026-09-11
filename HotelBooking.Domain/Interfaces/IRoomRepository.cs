@@ -15,5 +15,6 @@ namespace HotelBooking.Domain.Interfaces
         Task <IEnumerable<Room>> GetRoomsByHotelId(int hotelId);
         Task<IEnumerable<Room>> SearchRoomsAsync(int hotelId,int? capacity,decimal? minPrice,decimal? maxPrice);
         Task<Room?> GetRoomWithBookingsAsync(int roomId);
+        Task<IEnumerable<Room>> GetByHotelIdAsync(int hotelId);
     }
 }

@@ -18,10 +18,10 @@ namespace HotelBooking.Application.Mapping.RoomMap
                 RoomNumber = room.RoomNumber,
                 PricePerNight = room.PricePerNight,
                 Capacity = room.Capacity,
-                IsAvailable = room.IsAvailable,
                 HotelId = room.HotelId,
                 RoomType = room.Type,
-                HotelName = room.Hotel?.Name ?? "نامشخص"
+                HotelName = room.Hotel?.Name ?? "نامشخص",
+                Status = room.Status,
             };
         }
         public static Room ToEntity(CreateRoomDTo RoomDto)
@@ -33,7 +33,6 @@ namespace HotelBooking.Application.Mapping.RoomMap
                 Capacity = RoomDto.Capacity,
                 HotelId = RoomDto.HotelId,
                 Type = RoomDto.Type,
-                IsAvailable = RoomDto.IsAvialble
             };
         }
         public static Room UpdateEntity(UpdateRoomDTO RoomDto)
@@ -45,7 +44,6 @@ namespace HotelBooking.Application.Mapping.RoomMap
                 Capacity = RoomDto.Capacity,
                 HotelId = RoomDto.HotelId,
                 Type = RoomDto.Type,
-                IsAvailable = RoomDto.IsAvailable
             };
         }
     }

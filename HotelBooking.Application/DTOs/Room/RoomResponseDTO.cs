@@ -15,8 +15,9 @@ namespace HotelBooking.Application.DTOs.Room
         public RoomType RoomType { get; set; } 
         public decimal PricePerNight { get; set; }
         public int Capacity { get; set; }
-        public bool IsAvailable { get; set; }
         public int HotelId { get; set; }
         public string HotelName { get; set; } = string.Empty; // برای نمایش
+        public RoomStatus Status { get; set; }
+
     }
 }
