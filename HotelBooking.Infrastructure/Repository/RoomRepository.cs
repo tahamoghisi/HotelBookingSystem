@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static HotelBooking.Domain.Entities.Room;
 
 namespace HotelBooking.Infrastructure.Repository
 {
@@ -69,6 +70,14 @@ namespace HotelBooking.Infrastructure.Repository
                 query = query.Where(x => x.PricePerNight <= maxPrice.Value);
             }
             return await query.ToListAsync();
+        }
+        public async Task<bool> HasActiveRoomsAsync(int hotelId)
+        {
+            return await _dbContext.Rooms
+                .AnyAsync(x =>
+                    x.HotelId == hotelId &&
+                    (x.Status == RoomStatus.Reserved ||
+                     x.Status == RoomStatus.Occupied));
         }
     }
 }
