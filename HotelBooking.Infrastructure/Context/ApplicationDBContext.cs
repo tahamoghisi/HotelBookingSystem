@@ -41,7 +41,7 @@ namespace HotelBooking.Infrastructure
             modelBuilder.Entity<Customer>(entity =>
             {
                 entity.HasKey(e => e.Id);
-                entity.Property(e => e.FuullName).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.FullName).IsRequired().HasMaxLength(50);
                 entity.Property(e => e.Email).IsRequired().HasMaxLength(100);
                 entity.Property(e => e.PhoneNumber).IsRequired().HasMaxLength(11);
                 entity.Property(e => e.NationalCode).IsRequired().HasMaxLength(10);

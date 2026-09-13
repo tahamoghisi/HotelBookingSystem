@@ -19,7 +19,7 @@ namespace HotelBooking.Application.Mapping.BookingMap
                 Id = booking.Id,
                 CustomerId = booking.CustomerId,
                 CustomerName = booking.Customer != null
-                ? booking.Customer.FuullName : string.Empty,
+                ? booking.Customer.FullName : string.Empty,
                 CustomerEmail = booking.Customer?.Email ?? string.Empty,
                 CustomerPhone = booking.Customer?.PhoneNumber ?? string.Empty,
                 RoomId = booking.RoomId,

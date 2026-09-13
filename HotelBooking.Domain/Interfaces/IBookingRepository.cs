@@ -16,6 +16,7 @@ namespace HotelBooking.Domain.Interfaces
         Task<IEnumerable<Booking>> GetPastBookingsAsync();// دریافت رزروهای گذشته
         Task<Booking?> GetBookingWithDetailsAsync(int id);
         Task<bool> HasActiveBookingsAsync(int roomId);
+        Task<bool> HasCustomerActiveBookingsAsync(int customerId); //بررسی وجود امانت فعال مشتری
 
     }
 }

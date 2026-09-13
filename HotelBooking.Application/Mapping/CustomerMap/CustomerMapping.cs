@@ -16,16 +16,17 @@ namespace HotelBooking.Application.Mapping.CustomerMap
             {
                 Id = customer.Id,
                 NationalCode = customer.NationalCode,
-                FullName = customer.FuullName,
+                FullName = customer.FullName,
                 Email = customer.Email,
-                PhoneNumber = customer.PhoneNumber
+                PhoneNumber = customer.PhoneNumber,
+                UserId = customer.UserId,
             };
         }
         public static Customer ToEntity(CreateCustomerDTO CustomerDTO)
         {
             return new Customer
             {
-                FuullName = CustomerDTO.FullName,
+                FullName = CustomerDTO.FullName,
                 Email = CustomerDTO.Email,
                 PhoneNumber = CustomerDTO.PhoneNumber,
                 NationalCode = CustomerDTO.NationalCode
@@ -35,7 +36,7 @@ namespace HotelBooking.Application.Mapping.CustomerMap
         {
             return new Customer
             {
-                FuullName = CustomerDTO.FullName,
+                FullName = CustomerDTO.FullName,
                 Email = CustomerDTO.Email,
                 PhoneNumber = CustomerDTO.PhoneNumber,
                 NationalCode = CustomerDTO.NationalCode

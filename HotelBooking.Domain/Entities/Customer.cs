@@ -11,7 +11,7 @@ namespace HotelBooking.Domain.Entities
     {
         [Required]
         [MaxLength(100)]
-        public string FuullName { get; set; } = string.Empty;
+        public string FullName { get; set; } = string.Empty;
         [Required]
         [EmailAddress]
         public string Email { get; set; } = string.Empty;

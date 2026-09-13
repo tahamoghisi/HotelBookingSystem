@@ -62,6 +62,16 @@ namespace HotelBooking.Infrastructure.Service
                 //email , phoneNumber , nationalCode
             };
             await _unitOFWork.User.AddAsync(user);
+            var customer = new Customer
+            {
+                FullName = registerRequest.Username,
+                Email = registerRequest.Email,
+                PhoneNumber = registerRequest.PhoneNumber,
+                NationalCode = registerRequest.NationalCode,
+                UserId = user.Id
+            };
+
+            await _unitOFWork.Customers.AddAsync(customer);
             await _unitOFWork.SaveChangesAsync();
             var token = _jwtService.GenerateToken(user);
             return new RegisterResponse

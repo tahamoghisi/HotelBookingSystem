@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static HotelBooking.Domain.Entities.Booking;
 
 namespace HotelBooking.Infrastructure.Repository
 {
@@ -16,16 +17,22 @@ namespace HotelBooking.Infrastructure.Repository
         {
             _dbContext = dBContext;
         }
-        public async Task<bool> ExistsByEmailAsync(string email)
+        public async Task<bool> ExistsByEmailAsync(string email, int customerId)
         {
             return await _dbContext.Customers
-                .AnyAsync(x => x.Email == email);
+                .AnyAsync(x => x.Email == email && x.Id != customerId);
         }
 
-        public async Task<bool> ExistsByNationalCodeAsync(string nationalCode)
+        public async Task<bool> ExistsByNationalCodeAsync(string nationalCode, int customerId)
         {
             return await _dbContext.Customers
-                .AnyAsync(x => x.NationalCode == nationalCode);
+                .AnyAsync(x => x.NationalCode == nationalCode && x.Id != customerId);
+        }
+
+        public async Task<bool> ExistsByPhoneNumberAsync(string phoneNumber, int customerId)
+        {
+            return await _dbContext.Customers
+                .AnyAsync(x => x.PhoneNumber == phoneNumber && x.Id != customerId);
         }
 
         public async Task<Customer?> GetByEmailAsync(string email)
@@ -51,7 +58,7 @@ namespace HotelBooking.Infrastructure.Repository
             var query = _dbContext.Customers.AsQueryable();
             if (!string.IsNullOrWhiteSpace(name))
             {
-                query =query.Where(c => c.FuullName == name);
+                query = query.Where(c => c.FullName == name);
             }
             if (!string.IsNullOrWhiteSpace(email))
             {

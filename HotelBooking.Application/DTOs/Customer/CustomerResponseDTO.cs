@@ -13,5 +13,6 @@ namespace HotelBooking.Application.DTOs.Customer
         public string Email { get; set; } = string.Empty;
         public string PhoneNumber { get; set; } = string.Empty;
         public string NationalCode { get; set; } = string.Empty;
+        public int UserId { get; set; }
     }
 }
