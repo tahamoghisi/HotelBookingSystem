@@ -25,8 +25,10 @@ namespace HotelBooking.Infrastructure.Service
 
         public async Task<LoginResponse> LoginAsync(LoginRequest loginRequest)
         {
-            var user = await _unitOFWork.User.GetByUsernameAndPassword(loginRequest.userName , loginRequest.password);
+            var user = await _unitOFWork.User.GetByUsername(loginRequest.userName);
             if (user == null) throw new Exception("UserName or Password is incorrect");
+            var isPasswordValid = _passwordHasher.Verify(loginRequest.password, user.Password);
+            if (!isPasswordValid) throw new Exception("UserName or Password is incorrect");
             var token = _jwtService.GenerateToken(user);
             return new LoginResponse
             {
@@ -61,16 +63,15 @@ namespace HotelBooking.Infrastructure.Service
                 Role = "User"
                 //email , phoneNumber , nationalCode
             };
-            await _unitOFWork.User.AddAsync(user);
             var customer = new Customer
             {
                 FullName = registerRequest.Username,
                 Email = registerRequest.Email,
                 PhoneNumber = registerRequest.PhoneNumber,
                 NationalCode = registerRequest.NationalCode,
-                UserId = user.Id
+                User = user
             };
-
+            await _unitOFWork.User.AddAsync(user);
             await _unitOFWork.Customers.AddAsync(customer);
             await _unitOFWork.SaveChangesAsync();
             var token = _jwtService.GenerateToken(user);

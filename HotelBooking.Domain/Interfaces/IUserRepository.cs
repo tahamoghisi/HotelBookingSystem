@@ -12,6 +12,7 @@ namespace HotelBooking.Domain.Interfaces
         Task<User?> GetByUsernameAndPassword(string username , string passsword);
         Task<User?> GetByUserId(int userId);
         Task<bool> ExistByUsername(string username);
+        Task<User?> GetByUsername(string username);
 
     }
 }

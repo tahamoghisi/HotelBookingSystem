@@ -30,6 +30,12 @@ namespace HotelBooking.Infrastructure.Repository
             return user;
         }
 
+        public async Task<User?> GetByUsername(string username)
+        {
+            return await _context.Users
+                .FirstOrDefaultAsync(x => x.UserName == username);
+        }
+
         public async Task<User?> GetByUsernameAndPassword(string username , string password)
         {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.UserName == username && u.Password == password);
