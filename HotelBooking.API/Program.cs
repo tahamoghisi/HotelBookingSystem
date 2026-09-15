@@ -65,53 +65,25 @@ builder.Services.AddDbContext<ApplicationDBContext>(options =>
 
 // JWT Authentication
 builder.Services.AddAuthentication(
-    JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(option =>
+    JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(option =>
     {
-        option.TokenValidationParameters =
-        new TokenValidationParameters
+        option.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
             ValidateAudience = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
+
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidAudience = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
-        };
-        option.Events = new JwtBearerEvents
-        {
-            OnMessageReceived = context =>
-            {
-                var auth = context.Request.Headers.Authorization.ToString();
 
-                var token = auth.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase)
-                    ? auth.Substring("Bearer ".Length).Trim()
-                    : auth.Trim();
-
-                var handler = new JwtSecurityTokenHandler();
-
-                var canRead = handler.CanReadToken(token);
-
-                return Task.CompletedTask;
-            },
-
-            OnAuthenticationFailed = context =>
-            {
-                var exception = context.Exception;
-                var inner = exception.InnerException;
-                var message = exception.Message;
-                return Task.CompletedTask;
-            },
-
-            OnTokenValidated = context =>
-            {
-                Console.WriteLine("========== JWT VALID ==========");
-                Console.WriteLine("Token is valid!");
-                Console.WriteLine("================================");
-                return Task.CompletedTask;
-            }
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(
+                    builder.Configuration["Jwt:Key"]!))
         };
     });
+builder.Services.AddAuthorization();
 
 var app = builder.Build();
 

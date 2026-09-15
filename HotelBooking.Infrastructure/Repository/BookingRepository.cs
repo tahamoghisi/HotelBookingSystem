@@ -95,5 +95,14 @@ namespace HotelBooking.Infrastructure.Repository
              x.Status != BookingStatus.Cancelled &&
              x.CheckOutDate >= DateTime.Now);
         }
+        public async Task<bool> IsRoomAvailableAsync(int roomId,DateTime checkIn,DateTime checkOut,int? excludeBookingId = null)
+        {
+            return !await _dbContext.Bookings.AnyAsync(x =>
+                x.RoomId == roomId &&
+                x.Status != BookingStatus.Cancelled &&
+                x.Id != excludeBookingId &&
+                checkIn < x.CheckOutDate &&
+                checkOut > x.CheckInDate);
+        }
     }
 }

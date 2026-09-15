@@ -26,6 +26,10 @@ namespace HotelBooking.Application.ServiceInterface
             int roomId,
             DateTime checkIn,
             DateTime checkOut);
+        Task<bool> ConfirmAsync(int bookingId);
+        Task<bool> CheckInAsync(int bookingId);
+        Task<bool> CheckOutAsync(int bookingId);
+
     }
 }
 

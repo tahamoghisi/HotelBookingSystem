@@ -98,5 +98,46 @@ namespace HotelBooking.Infrastructure.Service
 
             return true;
         }
+        #region MaintenanceStatus
+        public async Task<bool> SetMaintenanceAsync(int roomId)
+        {
+            var room = await _unitOFWork.Rooms.GetByIdAsync(roomId);
+
+            if (room == null)
+                return false;
+
+            if (room.Status == RoomStatus.Occupied ||
+                room.Status == RoomStatus.Reserved)
+            {
+                throw new InvalidOperationException(
+                    "Cannot put a reserved or occupied room into maintenance.");
+            }
+
+            room.Status = RoomStatus.Maintenance;
+
+            _unitOFWork.Rooms.Update(room);
+            await _unitOFWork.SaveChangesAsync();
+
+            return true;
+        }
+        public async Task<bool> SetAvailableAsync(int roomId)
+        {
+            var room = await _unitOFWork.Rooms.GetByIdAsync(roomId);
+
+            if (room == null)
+                return false;
+
+            if (room.Status != RoomStatus.Maintenance)
+                throw new InvalidOperationException(
+                    "Room is not under maintenance.");
+
+            room.Status = RoomStatus.Available;
+
+            _unitOFWork.Rooms.Update(room);
+            await _unitOFWork.SaveChangesAsync();
+
+            return true;
+        }
+        #endregion
     }
 }

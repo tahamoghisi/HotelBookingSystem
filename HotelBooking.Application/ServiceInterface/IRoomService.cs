@@ -12,10 +12,11 @@ namespace HotelBooking.Application.ServiceInterface
         Task<IEnumerable<RoomResponseDTO>> GetAllAsync();
         Task<RoomResponseDTO?> GetByIdAsync(int id);
         Task<IEnumerable<RoomResponseDTO>> GetByHotelIdAsync(int hotelId);
-
         Task<RoomResponseDTO> CreateAsync(CreateRoomDTo dto);
         Task<bool> UpdateAsync(int id, UpdateRoomDTO dto);
         Task<bool> DeleteAsync(int id);
+        Task<bool> SetMaintenanceAsync(int roomId);
+        Task<bool> SetAvailableAsync(int roomId);
 
     }
 }

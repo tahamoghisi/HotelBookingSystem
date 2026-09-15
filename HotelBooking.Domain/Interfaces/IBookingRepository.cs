@@ -17,6 +17,7 @@ namespace HotelBooking.Domain.Interfaces
         Task<Booking?> GetBookingWithDetailsAsync(int id);
         Task<bool> HasActiveBookingsAsync(int roomId);
         Task<bool> HasCustomerActiveBookingsAsync(int customerId); //بررسی وجود امانت فعال مشتری
+        Task<bool> IsRoomAvailableAsync(int roomId, DateTime checkIn, DateTime checkOut, int? excludeBookingId = null);
 
     }
 }

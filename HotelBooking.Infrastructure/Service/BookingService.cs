@@ -11,6 +11,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using static HotelBooking.Domain.Entities.Booking;
+using static HotelBooking.Domain.Entities.Room;
 
 namespace HotelBooking.Infrastructure.Service
 {
@@ -133,6 +134,94 @@ namespace HotelBooking.Infrastructure.Service
             booking.TotalPrice = dto.TotalPrice;
              _unitOFWork.Bookings.Update(booking);
             await _unitOFWork.SaveChangesAsync();
+            return true;
+        }
+        public async Task<bool> ConfirmAsync(int bookingId)
+        {
+            var booking = await _unitOFWork.Bookings.GetByIdAsync(bookingId);
+
+            if (booking == null)
+                return false;
+
+            if (booking.Status != BookingStatus.Pending)
+                throw new InvalidOperationException(
+                    "Only pending bookings can be confirmed.");
+
+            var room = await _unitOFWork.Rooms.GetByIdAsync(booking.RoomId);
+
+            if (room == null)
+                throw new ArgumentException("Room Not Found!");
+
+            var available = await _unitOFWork.Rooms.IsRoomAvailableAsync(
+                booking.RoomId,
+                booking.CheckInDate,
+                booking.CheckOutDate);
+
+            if (!available)
+                throw new InvalidOperationException(
+                    "Room is no longer available for the selected dates.");
+
+            booking.Status = BookingStatus.Confirmed;
+
+            room.Status = RoomStatus.Reserved;
+
+            _unitOFWork.Bookings.Update(booking);
+            _unitOFWork.Rooms.Update(room);
+
+            await _unitOFWork.SaveChangesAsync();
+
+            return true;
+        }
+        public async Task<bool> CheckInAsync(int bookingId)
+        {
+            var booking = await _unitOFWork.Bookings.GetByIdAsync(bookingId);
+
+            if (booking == null)
+                return false;
+
+            if (booking.Status != BookingStatus.Confirmed)
+                throw new InvalidOperationException(
+                    "Only confirmed bookings can be checked in.");
+
+            var room = await _unitOFWork.Rooms.GetByIdAsync(booking.RoomId);
+
+            if (room == null)
+                throw new ArgumentException("Room Not Found!");
+
+            booking.Status = BookingStatus.CheckedIn;
+            room.Status = RoomStatus.Occupied;
+
+            _unitOFWork.Bookings.Update(booking);
+            _unitOFWork.Rooms.Update(room);
+
+            await _unitOFWork.SaveChangesAsync();
+
+            return true;
+        }
+        public async Task<bool> CheckOutAsync(int bookingId)
+        {
+            var booking = await _unitOFWork.Bookings.GetByIdAsync(bookingId);
+
+            if (booking == null)
+                return false;
+
+            if (booking.Status != BookingStatus.CheckedIn)
+                throw new InvalidOperationException(
+                    "Only checked-in bookings can be checked out.");
+
+            var room = await _unitOFWork.Rooms.GetByIdAsync(booking.RoomId);
+
+            if (room == null)
+                throw new ArgumentException("Room Not Found!");
+
+            booking.Status = BookingStatus.Completed;
+            room.Status = RoomStatus.Available;
+
+            _unitOFWork.Bookings.Update(booking);
+            _unitOFWork.Rooms.Update(room);
+
+            await _unitOFWork.SaveChangesAsync();
+
             return true;
         }
     }
