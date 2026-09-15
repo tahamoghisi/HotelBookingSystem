@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
+using System.IdentityModel.Tokens.Jwt;
 using System.Reflection;
 using System.Text;
 
@@ -76,6 +77,39 @@ builder.Services.AddAuthentication(
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidAudience = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
+        };
+        option.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var auth = context.Request.Headers.Authorization.ToString();
+
+                var token = auth.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase)
+                    ? auth.Substring("Bearer ".Length).Trim()
+                    : auth.Trim();
+
+                var handler = new JwtSecurityTokenHandler();
+
+                var canRead = handler.CanReadToken(token);
+
+                return Task.CompletedTask;
+            },
+
+            OnAuthenticationFailed = context =>
+            {
+                var exception = context.Exception;
+                var inner = exception.InnerException;
+                var message = exception.Message;
+                return Task.CompletedTask;
+            },
+
+            OnTokenValidated = context =>
+            {
+                Console.WriteLine("========== JWT VALID ==========");
+                Console.WriteLine("Token is valid!");
+                Console.WriteLine("================================");
+                return Task.CompletedTask;
+            }
         };
     });
 

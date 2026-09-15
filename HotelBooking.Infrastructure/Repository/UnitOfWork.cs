@@ -16,7 +16,8 @@ namespace HotelBooking.Infrastructure.Repository
         IHotelRepository hotels,
         IRoomRepository rooms,
         ICustomerRepository customers,
-        IBookingRepository bookings
+        IBookingRepository bookings,
+        IUserRepository users
             )
         {
             _dbContext = context;
@@ -24,6 +25,7 @@ namespace HotelBooking.Infrastructure.Repository
             Rooms = rooms;
             Customers = customers;
             Bookings = bookings;
+            User = users;
         }
         public IHotelRepository Hotels { get; }
 

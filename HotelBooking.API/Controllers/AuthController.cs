@@ -1,5 +1,6 @@
 ﻿using HotelBooking.Application.DTOs.Auth;
 using HotelBooking.Domain.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HotelBooking.API.Controllers
@@ -11,9 +12,12 @@ namespace HotelBooking.API.Controllers
         {
               _authService = authService;
         }
-        public IActionResult Index()
+        [Authorize]
+        [HttpGet("test-auth")]
+        public IActionResult TestAuth()
         {
-            return Ok();
+            Console.WriteLine("========== CONTROLLER REACHED ==========");
+            return Ok("Authentication successful!");
         }
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest loginRequest)
@@ -26,6 +30,11 @@ namespace HotelBooking.API.Controllers
         {
             var user = await _authService.RegisterAsync(registerRequest);
             return Ok(user);
+        }
+        [HttpGet("test")]
+        public IActionResult Test()
+        {
+            return Ok("API works");
         }
     }
 }
