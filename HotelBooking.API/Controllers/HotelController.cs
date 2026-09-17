@@ -21,6 +21,13 @@ namespace HotelBooking.API.Controllers
             var hotels = await _hotelService.GetAllAsync();
             return Ok(hotels);
         }
+        [HttpGet("{hotelId}/rooms")]
+        public async Task<IActionResult> GetHotelRooms(int hotelId)
+        {
+            var rooms = await _hotelService.GetHotelRoomsAsync(hotelId);
+
+            return Ok(rooms);
+        }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)

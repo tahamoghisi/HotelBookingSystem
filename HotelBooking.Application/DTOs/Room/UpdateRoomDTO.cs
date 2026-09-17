@@ -9,7 +9,6 @@ namespace HotelBooking.Application.DTOs.Room
 {
     public class UpdateRoomDTO
     {
-        public int Id { get; set; }
         public int HotelId { get; set; }
         public int RoomNumber { get; set; }
         public RoomType Type { get; set; } // Single, Double, Suite

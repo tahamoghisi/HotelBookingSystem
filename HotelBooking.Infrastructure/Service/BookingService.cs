@@ -28,6 +28,23 @@ namespace HotelBooking.Infrastructure.Service
 
             if (booking == null)
                 return false;
+            if (booking.Status != BookingStatus.Pending &&
+                booking.Status != BookingStatus.Confirmed)
+            {
+                throw new InvalidOperationException(
+                    "Only pending or confirmed bookings can be cancelled.");
+            }
+            if (booking.Status == BookingStatus.Confirmed)
+            {
+                var room = await _unitOFWork.Rooms.GetByIdAsync(booking.RoomId);
+
+                if (room == null)
+                    throw new ArgumentException("Room Not Found!");
+
+                room.Status = RoomStatus.Available;
+
+                _unitOFWork.Rooms.Update(room);
+            }
             booking.Status = BookingStatus.Cancelled;
 
             _unitOFWork.Bookings.Update(booking);
@@ -59,7 +76,7 @@ namespace HotelBooking.Infrastructure.Service
             {
                 throw new ArgumentException("Hotel Not Found!");
             }
-            var available = await _unitOFWork.Rooms.IsRoomAvailableAsync(dto.RoomId,dto.CheckInDate,dto.CheckOutDate);
+            var available = await _unitOFWork.Rooms.IsRoomAvailableAsync(dto.RoomId, dto.CheckInDate, dto.CheckOutDate);
             if (!available)
             {
                 throw new Exception("Room is not available for the selected dates.");
@@ -125,14 +142,14 @@ namespace HotelBooking.Infrastructure.Service
         public async Task<bool> UpdateAsync(int id, UpdateBookingDTO dto)
         {
             var booking = await _unitOFWork.Bookings.GetByIdAsync(id);
-            if(booking == null) return false;
+            if (booking == null) return false;
             booking.CheckOutDate = dto.CheckOutDate;
             booking.CheckInDate = dto.CheckInDate;
             booking.HotelId = dto.HotelId;
             booking.RoomId = dto.RoomId;
             booking.CustomerId = dto.CustomerId;
             booking.TotalPrice = dto.TotalPrice;
-             _unitOFWork.Bookings.Update(booking);
+            _unitOFWork.Bookings.Update(booking);
             await _unitOFWork.SaveChangesAsync();
             return true;
         }
@@ -152,10 +169,11 @@ namespace HotelBooking.Infrastructure.Service
             if (room == null)
                 throw new ArgumentException("Room Not Found!");
 
-            var available = await _unitOFWork.Rooms.IsRoomAvailableAsync(
+            var available = await _unitOFWork.Bookings.IsRoomAvailableAsync(
                 booking.RoomId,
                 booking.CheckInDate,
-                booking.CheckOutDate);
+                booking.CheckOutDate,
+                booking.Id);
 
             if (!available)
                 throw new InvalidOperationException(

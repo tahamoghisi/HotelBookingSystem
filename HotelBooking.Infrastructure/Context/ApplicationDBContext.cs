@@ -55,7 +55,7 @@ namespace HotelBooking.Infrastructure
             modelBuilder.Entity<Room>(entity =>
             {
                 entity.HasKey(e => e.Id);
-                entity.HasOne(e => e.Hotel).WithMany(c => c.Rooms);
+                entity.HasOne(e => e.Hotel).WithMany(h => h.Rooms).HasForeignKey(e => e.HotelId).OnDelete(DeleteBehavior.Restrict);
                 entity.HasMany(r => r.Bookings).WithOne(b => b.Room).HasForeignKey(b => b.RoomId).OnDelete(DeleteBehavior.Restrict);
                 entity.Property(e => e.RoomNumber).IsRequired().HasMaxLength(10);
                 entity.Property(e => e.Type).IsRequired().HasMaxLength(50);
@@ -73,7 +73,7 @@ namespace HotelBooking.Infrastructure
                 entity.Property(h => h.PhoneNumber).HasMaxLength(20);
                 entity.Property(h => h.Email).HasMaxLength(100);
                 entity.Property(h => h.Description).HasMaxLength(1000);
-                entity.HasMany(h => h.Rooms).WithOne(r => r.Hotel).HasForeignKey(r => r.RoomNumber).OnDelete(DeleteBehavior.Restrict);
+                entity.HasMany(h => h.Rooms).WithOne(r => r.Hotel).HasForeignKey(r => r.HotelId).OnDelete(DeleteBehavior.Restrict);
                 
             });
         }

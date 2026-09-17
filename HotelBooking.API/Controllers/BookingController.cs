@@ -42,15 +42,9 @@ namespace HotelBooking.API.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(
-            int id,
-            UpdateBookingDTO dto)
-        {
+        public async Task<IActionResult> Update(int id,UpdateBookingDTO dto){
             var result = await _bookingService.UpdateAsync(id, dto);
-
-            if (!result)
-                return NotFound();
-
+            if (!result)return NotFound();
             return NoContent();
         }
 
@@ -58,40 +52,28 @@ namespace HotelBooking.API.Controllers
         public async Task<IActionResult> Cancel(int id)
         {
             var result = await _bookingService.CancelAsync(id);
-
-            if (!result)
-                return NotFound();
-
+            if (!result)return NotFound();
             return NoContent();
         }
         [HttpPut("{id}/confirm")]
         public async Task<IActionResult> Confirm(int id)
         {
             var result = await _bookingService.ConfirmAsync(id);
-
-            if (!result)
-                return NotFound();
-
+            if (!result)return NotFound();
             return NoContent();
         }
         [HttpPut("{id}/check-in")]
         public async Task<IActionResult> CheckIn(int id)
         {
             var result = await _bookingService.CheckInAsync(id);
-
-            if (!result)
-                return NotFound();
-
+            if (!result)return NotFound();
             return NoContent();
         }
         [HttpPut("{id}/check-out")]
         public async Task<IActionResult> CheckOut(int id)
         {
             var result = await _bookingService.CheckOutAsync(id);
-
-            if (!result)
-                return NotFound();
-
+            if (!result)return NotFound();
             return NoContent();
         }
     }

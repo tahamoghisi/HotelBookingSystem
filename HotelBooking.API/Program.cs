@@ -51,6 +51,10 @@ builder.Services.AddScoped(typeof(IGenericRepositoy<>), typeof(GenericRepository
 builder.Services.AddScoped<IJWTService, JWTService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IPasswordHasher,PasswordHasher>();
+builder.Services.AddScoped<IHotelService, HotelService>();
+builder.Services.AddScoped<IRoomService, RoomService>();
+builder.Services.AddScoped<IBookingService, BookingService>();
+builder.Services.AddScoped<ICustomerService, CustomerService>();
 
 // Unit of Work
 builder.Services.AddScoped<IUnitOFWork, UnitOfWork>();

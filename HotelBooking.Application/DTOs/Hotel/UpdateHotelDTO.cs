@@ -8,7 +8,6 @@ namespace HotelBooking.Application.DTOs.Hotel
 {
     public class UpdateHotelDTO
     {
-        public int HotelId { get; set; }
         public string Name { get; set; }
         public string Address { get; set; }
         public string City { get; set; }

@@ -1,4 +1,5 @@
 ﻿using HotelBooking.Application.DTOs.Hotel;
+using HotelBooking.Application.DTOs.Room;
 using HotelBooking.Application.Mapping.HotelMap;
 using HotelBooking.Application.Mapping.RoomMap;
 using HotelBooking.Application.ServiceInterface;
@@ -50,7 +51,7 @@ namespace HotelBooking.Infrastructure.Service
         {
             var hotels = await _unitOFWork.Hotels.GetAllAsync();
             return hotels.Select(x => HotelMapping.ToDto(x)).ToList();
-         }
+        }
 
         public async Task<HotelResponseDTO?> GetByIdAsync(int id)
         {
@@ -65,7 +66,7 @@ namespace HotelBooking.Infrastructure.Service
         public async Task<bool> UpdateAsync(int id, UpdateHotelDTO dto)
         {
             var hotel = await _unitOFWork.Hotels.GetByIdAsync(id);
-            if(hotel == null)
+            if (hotel == null)
             {
                 throw new InvalidOperationException("Hotel not found!");
             }
@@ -80,6 +81,16 @@ namespace HotelBooking.Infrastructure.Service
             _unitOFWork.Hotels.Update(hotel);
             await _unitOFWork.SaveChangesAsync();
             return true;
+        }
+        public async Task<IEnumerable<RoomResponseDTO>> GetHotelRoomsAsync(int hotelId)
+        {
+            var hotel = await _unitOFWork.Hotels.GetByIdAsync(hotelId);
+            if (hotel == null)
+            {
+                throw new InvalidOperationException("Hotel not found!");
+            }
+            var hotelsRooms = await _unitOFWork.Rooms.GetByHotelIdAsync(hotelId);
+            return hotelsRooms.Select(x => RoomMapping.ToDto(x)).ToList();
         }
     }
 }

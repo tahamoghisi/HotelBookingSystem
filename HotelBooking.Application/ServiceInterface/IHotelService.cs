@@ -1,4 +1,5 @@
 ﻿using HotelBooking.Application.DTOs.Hotel;
+using HotelBooking.Application.DTOs.Room;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,5 +19,6 @@ namespace HotelBooking.Application.ServiceInterface
         Task<bool> UpdateAsync(int id, UpdateHotelDTO dto);
 
         Task<bool> DeleteAsync(int id);
+        Task<IEnumerable<RoomResponseDTO>> GetHotelRoomsAsync(int hotelId);
     }
 }
