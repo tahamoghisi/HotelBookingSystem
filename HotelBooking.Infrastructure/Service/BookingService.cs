@@ -83,6 +83,11 @@ namespace HotelBooking.Infrastructure.Service
             }
             var booking = BookingMapping.ToEntity(dto);
             booking.Status = BookingStatus.Pending;
+            //محاسبه ی مبلغ کل
+            var nights = (dto.CheckOutDate - dto.CheckInDate).Days;
+            booking.TotalPrice = room.PricePerNight * nights;
+
+
             await _unitOFWork.Bookings.AddAsync(booking);
             await _unitOFWork.SaveChangesAsync();
             var response = BookingMapping.ToDto(booking);
@@ -91,7 +96,7 @@ namespace HotelBooking.Infrastructure.Service
 
         public async Task<IEnumerable<BookingResponseDTO>> GetAllAsync()
         {
-            var bookings = await _unitOFWork.Bookings.GetAllAsync();
+            var bookings = await _unitOFWork.Bookings.GetAllBookingsAsync();
             //return bookings.Select(BookingMapping.ToDto);      این متد هم درست است.
 
             var result = bookings
@@ -114,7 +119,7 @@ namespace HotelBooking.Infrastructure.Service
 
         public async Task<BookingResponseDTO?> GetByIdAsync(int id)
         {
-            var booking = await _unitOFWork.Bookings.GetByIdAsync(id);
+            var booking = await _unitOFWork.Bookings.GetBookingByIdAsync(id);
             if (booking == null)
             {
                 return null;

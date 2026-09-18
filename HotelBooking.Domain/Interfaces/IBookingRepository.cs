@@ -18,6 +18,8 @@ namespace HotelBooking.Domain.Interfaces
         Task<bool> HasActiveBookingsAsync(int roomId);
         Task<bool> HasCustomerActiveBookingsAsync(int customerId); //بررسی وجود امانت فعال مشتری
         Task<bool> IsRoomAvailableAsync(int roomId, DateTime checkIn, DateTime checkOut, int? excludeBookingId = null);
+        Task<IEnumerable<Booking>> GetAllBookingsAsync();
+        Task<Booking?> GetBookingByIdAsync(int bookingId);
 
     }
 }

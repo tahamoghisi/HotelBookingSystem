@@ -61,6 +61,7 @@ namespace HotelBooking.Infrastructure
                 entity.Property(e => e.Type).IsRequired().HasMaxLength(50);
                 entity.Property(e => e.PricePerNight).HasColumnType("decimal(18,2)");
                 entity.HasIndex(e => e.RoomNumber).IsUnique();
+                entity.Property(e => e.Status).HasConversion<string>();
             });
 
             modelBuilder.Entity<Hotel>(entity =>

@@ -104,5 +104,21 @@ namespace HotelBooking.Infrastructure.Repository
                 checkIn < x.CheckOutDate &&
                 checkOut > x.CheckInDate);
         }
+        public async Task<IEnumerable<Booking>> GetAllBookingsAsync()
+        {
+            return await _dbContext.Bookings
+                .Include(x => x.Customer)
+                .Include(x => x.Room)
+                .Include(x => x.Hotel)
+                .ToListAsync();
+        }
+        public async Task<Booking?> GetBookingByIdAsync(int bookingId)
+        {
+            return await _dbContext.Bookings
+                .Include(x => x.Customer)
+                .Include(x => x.Room)
+                .Include(x => x.Hotel)
+                .FirstOrDefaultAsync(x => x.Id == bookingId);
+        }
     }
 }
