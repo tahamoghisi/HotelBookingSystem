@@ -1,4 +1,7 @@
+using FluentValidation;
+using HotelBooking.Application.DTOs.Hotel;
 using HotelBooking.Application.ServiceInterface;
+using HotelBooking.Application.Validator.Room;
 using HotelBooking.Domain.Interfaces;
 using HotelBooking.Infrastructure;
 using HotelBooking.Infrastructure.Repository;
@@ -64,6 +67,14 @@ builder.Services.AddScoped<ICustomerService, CustomerService>();
 
 // Unit of Work
 builder.Services.AddScoped<IUnitOFWork, UnitOfWork>();
+
+//Validate
+builder.Services.AddValidatorsFromAssemblyContaining<CreateRoomValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<UpdateRoomValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<CreateHotelDTO>();
+builder.Services.AddValidatorsFromAssemblyContaining<UpdateHotelDTO>();
+
+
 
 
 
