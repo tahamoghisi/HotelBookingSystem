@@ -52,7 +52,6 @@ namespace HotelBooking.Application.Mapping.BookingMap
                 RoomId = dto.RoomId,
                 CheckInDate = dto.CheckInDate,
                 CheckOutDate = dto.CheckOutDate,
-                TotalPrice = dto.TotalPrice,
                 //Status = dto.Status,
                 HotelId = dto.HotelId
             };

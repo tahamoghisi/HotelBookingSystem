@@ -9,17 +9,11 @@ namespace HotelBooking.Domain.Entities
 {
     public class Booking : BaseEntity
     {
-        [Required]
         public int RoomId { get; set; }
-        [Required]
         public int HotelId { get; set; }
-        [Required]
         public int CustomerId { get; set; }
-        [Required]
         public DateTime CheckInDate { get; set; }
-        [Required]
         public DateTime CheckOutDate { get; set; }
-        [Required]
         public decimal TotalPrice { get; set; }
         public BookingStatus Status { get; set; }
 
