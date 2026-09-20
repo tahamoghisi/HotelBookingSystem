@@ -98,7 +98,6 @@ namespace HotelBooking.Infrastructure.Service
         {
             var bookings = await _unitOFWork.Bookings.GetAllBookingsAsync();
             //return bookings.Select(BookingMapping.ToDto);      این متد هم درست است.
-
             var result = bookings
             .Select(x => BookingMapping.ToDto(x))
             .ToList();

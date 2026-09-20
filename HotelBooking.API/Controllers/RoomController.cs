@@ -1,5 +1,6 @@
 ﻿using HotelBooking.Application.DTOs.Room;
 using HotelBooking.Application.ServiceInterface;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HotelBooking.API.Controllers
@@ -33,6 +34,7 @@ namespace HotelBooking.API.Controllers
             return Ok(room);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<IActionResult> Create(CreateRoomDTo dto)
         {
@@ -40,6 +42,7 @@ namespace HotelBooking.API.Controllers
             return Ok(room);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(
             int id,
@@ -53,6 +56,7 @@ namespace HotelBooking.API.Controllers
             return NoContent();
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
@@ -63,6 +67,8 @@ namespace HotelBooking.API.Controllers
 
             return NoContent();
         }
+
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}/maintenance")]
         public async Task<IActionResult> SetMaintenance(int id)
         {
@@ -73,6 +79,8 @@ namespace HotelBooking.API.Controllers
 
             return NoContent();
         }
+
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}/available")]
         public async Task<IActionResult> SetAvailable(int id)
         {

@@ -1,5 +1,6 @@
 ﻿using HotelBooking.Application.DTOs.Hotel;
 using HotelBooking.Application.ServiceInterface;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HotelBooking.API.Controllers
@@ -40,6 +41,7 @@ namespace HotelBooking.API.Controllers
             return Ok(hotel);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<IActionResult> Create(CreateHotelDTO dto)
         {
@@ -47,6 +49,7 @@ namespace HotelBooking.API.Controllers
             return Ok(hotel);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, UpdateHotelDTO dto)
         {
@@ -58,6 +61,7 @@ namespace HotelBooking.API.Controllers
             return NoContent();
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {

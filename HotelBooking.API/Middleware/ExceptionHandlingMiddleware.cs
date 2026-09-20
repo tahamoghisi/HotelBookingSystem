@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using HotelBooking.Application.Common.Models;
+using System.Text.Json;
 
 namespace HotelBooking.API.Middleware
 {
@@ -30,18 +31,19 @@ namespace HotelBooking.API.Middleware
             context.Response.StatusCode = exception switch
             {
                 ArgumentException => StatusCodes.Status400BadRequest,
+
                 InvalidOperationException => StatusCodes.Status409Conflict,
+
                 _ => StatusCodes.Status500InternalServerError
             };
 
-            var response = new
-            {
-                statusCode = context.Response.StatusCode,
-                message = exception.Message
-            };
+            var response = ApiResponse<object>.Fail(
+                exception.Message
+            );
 
             await context.Response.WriteAsync(
-                JsonSerializer.Serialize(response));
+                JsonSerializer.Serialize(response)
+            );
         }
     }
 }

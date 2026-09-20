@@ -1,5 +1,6 @@
 ﻿using HotelBooking.Application.DTOs.Customer;
 using HotelBooking.Application.ServiceInterface;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HotelBooking.API.Controllers
