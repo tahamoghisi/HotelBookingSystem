@@ -147,13 +147,46 @@ namespace HotelBooking.Infrastructure.Service
         public async Task<bool> UpdateAsync(int id, UpdateBookingDTO dto)
         {
             var booking = await _unitOFWork.Bookings.GetByIdAsync(id);
-            if (booking == null) return false;
+
+            if (booking == null)
+                return false;
+
+            if (dto.CheckInDate >= dto.CheckOutDate)
+                throw new ArgumentException(
+                    "Check-out date must be after check-in date.");
+
+            var customer = await _unitOFWork.Customers.GetByIdAsync(dto.CustomerId);
+
+            if (customer == null)
+                throw new ArgumentException("Customer not found.");
+
+            var hotel = await _unitOFWork.Hotels.GetByIdAsync(dto.HotelId);
+
+            if (hotel == null)
+                throw new ArgumentException("Hotel not found.");
+
+            var room = await _unitOFWork.Rooms.GetByIdAsync(dto.RoomId);
+
+            if (room == null)
+                throw new ArgumentException("Room not found.");
+
+            var available = await _unitOFWork.Bookings.IsRoomAvailableAsync(
+                dto.RoomId,
+                dto.CheckInDate,
+                dto.CheckOutDate,
+                booking.Id);
+
+            if (!available)
+                throw new InvalidOperationException(
+                    "Room is not available for the selected dates.");
+
+            var nights = (dto.CheckOutDate - dto.CheckInDate).Days;
             booking.CheckOutDate = dto.CheckOutDate;
             booking.CheckInDate = dto.CheckInDate;
             booking.HotelId = dto.HotelId;
             booking.RoomId = dto.RoomId;
             booking.CustomerId = dto.CustomerId;
-            booking.TotalPrice = dto.TotalPrice;
+            booking.TotalPrice = room.PricePerNight * nights;
             _unitOFWork.Bookings.Update(booking);
             await _unitOFWork.SaveChangesAsync();
             return true;

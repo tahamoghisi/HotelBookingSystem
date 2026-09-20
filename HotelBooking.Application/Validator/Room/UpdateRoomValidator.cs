@@ -31,6 +31,7 @@ namespace HotelBooking.Application.Validator.Room
             RuleFor(x => x.Capacity)
             .InclusiveBetween(1, 10)
             .WithMessage("Capacity must be between 1 and 10.");
+
         }
     }
 }

@@ -1,6 +1,11 @@
 using FluentValidation;
 using HotelBooking.Application.DTOs.Hotel;
 using HotelBooking.Application.ServiceInterface;
+using FluentValidation.Validators;
+using HotelBooking.Application.DTOs.Hotel;
+using HotelBooking.Application.ServiceInterface;
+using HotelBooking.Application.Validator.Customer;
+using HotelBooking.Application.Validator.Hotel;
 using HotelBooking.Application.Validator.Room;
 using HotelBooking.Domain.Interfaces;
 using HotelBooking.Infrastructure;
@@ -15,6 +20,9 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Reflection;
 using System.Text;
 using System.Text.Json.Serialization;
+using HotelBooking.API.Middleware;
+using HotelBooking.Application.Validator.User;
+using HotelBooking.Application.Validator.Booking;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -68,13 +76,21 @@ builder.Services.AddScoped<ICustomerService, CustomerService>();
 // Unit of Work
 builder.Services.AddScoped<IUnitOFWork, UnitOfWork>();
 
-//Validate
+
+
+
+
+
+//validation
 builder.Services.AddValidatorsFromAssemblyContaining<CreateRoomValidator>();
 builder.Services.AddValidatorsFromAssemblyContaining<UpdateRoomValidator>();
-builder.Services.AddValidatorsFromAssemblyContaining<CreateHotelDTO>();
-builder.Services.AddValidatorsFromAssemblyContaining<UpdateHotelDTO>();
-
-
+builder.Services.AddValidatorsFromAssemblyContaining<CreateHotelValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<UpdateHotelValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<CreateCustomerValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<UpdateCustomerValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<CreateBookingValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<UpdateBookingValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<RegisterValidator>();
 
 
 
@@ -108,11 +124,8 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-//if (app.Environment.IsDevelopment())
-//{
-//    app.MapOpenApi();
-//}
+//ExceptionHandlingMiddleware
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 // Swagger
 if (app.Environment.IsDevelopment())
