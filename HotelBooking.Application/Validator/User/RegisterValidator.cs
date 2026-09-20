@@ -14,22 +14,26 @@ namespace HotelBooking.Application.Validator.User
         {
             RuleFor(x => x.UserName)
                 .NotEmpty()
+                .WithMessage("User name cannot be null.")
                 .MinimumLength(3)
                 .MaximumLength(50)
                 .WithMessage("Username must be between 3 and 50 characters.");
 
             RuleFor(x => x.Password)
                 .NotEmpty()
+                .WithMessage("Password cannot be null.")
                 .MinimumLength(8)
                 .WithMessage("Password must be at least 8 characters.");
 
             RuleFor(x => x.FullName)
                 .NotEmpty()
+                .WithMessage("Full name cannot be null.")
                 .MaximumLength(100)
                 .WithMessage("Full name cannot exceed 100 characters.");
 
             RuleFor(x => x.Email)
                 .NotEmpty()
+                .WithMessage("Email cannot be null.")
                 .EmailAddress()
                 .WithMessage("Email address is not valid.");
         }

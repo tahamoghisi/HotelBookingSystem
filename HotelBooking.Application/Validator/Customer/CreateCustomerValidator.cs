@@ -14,22 +14,29 @@ namespace HotelBooking.Application.Validator.Customer
         {
             RuleFor(x => x.FullName)
                 .NotEmpty()
-                .MaximumLength(100);
+                .WithMessage("نام و نام خانوادگی الزامی است.")
+                .MaximumLength(100)
+                .WithMessage("نام و نام خانوادگی نمی‌تواند بیشتر از 100 کاراکتر باشد.");
 
             RuleFor(x => x.Email)
                 .NotEmpty()
-                .EmailAddress();
+                .WithMessage("ایمیل الزامی است.")
+                .EmailAddress()
+                .WithMessage("ایمیل معتبر نیست.");
 
             RuleFor(x => x.PhoneNumber)
                 .NotEmpty()
+                .WithMessage("شماره تلفن الزامی است.")
                 .Matches(@"^09\d{9}$")
                 .WithMessage("شماره تلفن معتبر نیست.");
 
             RuleFor(x => x.NationalCode)
                 .NotEmpty()
+                .WithMessage("کد ملی الزامی است.")
                 .Length(10)
+                .WithMessage("کد ملی باید 10 رقم باشد.")
                 .Matches(@"^\d{10}$")
-                .WithMessage("کد ملی باید 10 رقم باشد.");
+                .WithMessage("کد ملی باید فقط شامل اعداد باشد.");
         }
     }
 }

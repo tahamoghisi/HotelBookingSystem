@@ -13,19 +13,24 @@ namespace HotelBooking.Application.Validator.Booking
         public UpdateBookingValidator()
         {
             RuleFor(x => x.CustomerId)
-                .GreaterThan(0);
+                .GreaterThan(0)
+                .WithMessage("CustomerId must be greater than 0.");
 
             RuleFor(x => x.HotelId)
-                .GreaterThan(0);
+                .GreaterThan(0)
+                .WithMessage("HotelId must be greater than 0.");
 
             RuleFor(x => x.RoomId)
-                .GreaterThan(0);
+                .GreaterThan(0)
+                .WithMessage("RoomId must be greater than 0.");
 
             RuleFor(x => x.CheckInDate)
-                .NotEmpty();
+                .NotEmpty()
+                .WithMessage("Check-in date is required.");
 
             RuleFor(x => x.CheckOutDate)
-                .NotEmpty();
+                .NotEmpty()
+                .WithMessage("Check-out date is required.");
 
             RuleFor(x => x)
                 .Must(x => x.CheckOutDate > x.CheckInDate)
