@@ -1,5 +1,6 @@
 ﻿using HotelBooking.Application.DTOs.Room;
 using HotelBooking.Application.ServiceInterface;
+using HotelBooking.Infrastructure.Service;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -21,6 +22,13 @@ namespace HotelBooking.API.Controllers
         {
             var rooms = await _roomService.GetAllAsync();
             return Ok(rooms);
+        }
+        [HttpGet("paged")]
+        public async Task<IActionResult> GetPaged(int hotelId,  int page = 1, int pageSize = 10)
+        {
+            var result = await _roomService.GetPagedAsync(hotelId, page, pageSize);
+
+            return Ok(result);
         }
 
         [HttpGet("{id}")]

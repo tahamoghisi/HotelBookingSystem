@@ -120,5 +120,50 @@ namespace HotelBooking.Infrastructure.Repository
                 .Include(x => x.Hotel)
                 .FirstOrDefaultAsync(x => x.Id == bookingId);
         }
+
+        public async Task<IEnumerable<Booking>> GetBookingPagedAsync(int page, int pageSize, int? hotelId, int? customerId, int? roomId, BookingStatus? status)
+        {
+            var query = _dbContext.Bookings.AsQueryable();
+            if (hotelId != null)
+            {
+                query = query.Where(b => b.HotelId == hotelId);
+            }
+            if (customerId != null)
+            {
+                query = query.Where(b => b.CustomerId == customerId);
+            }
+            if (roomId != null)
+            {
+                query = query.Where(b => b.RoomId == roomId);
+            }
+            if (status != null)
+            {
+                query = query.Where(b => b.Status == status.Value);
+            }
+            query = query.OrderBy(b => b.Id).Skip((page - 1) * pageSize).Take(pageSize);
+            return await query.ToListAsync();
+        }
+
+        public async Task<int> CountFilteredAsync(int? hotelId, int? customerId, int? roomId, BookingStatus? status)
+        {
+            var query = _dbContext.Bookings.AsQueryable();
+            if (hotelId != null)
+            {
+                query = query.Where(b => b.HotelId == hotelId);
+            }
+            if (customerId != null)
+            {
+                query = query.Where(b => b.CustomerId == customerId);
+            }
+            if (roomId != null)
+            {
+                query = query.Where(b => b.RoomId == roomId);
+            }
+            if (status != null)
+            {
+                query = query.Where(b => b.Status == status.Value);
+            }
+            return await query.CountAsync();
+        }
     }
 }

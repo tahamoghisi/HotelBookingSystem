@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static HotelBooking.Domain.Entities.Booking;
 
 namespace HotelBooking.Domain.Interfaces
 {
@@ -20,6 +21,7 @@ namespace HotelBooking.Domain.Interfaces
         Task<bool> IsRoomAvailableAsync(int roomId, DateTime checkIn, DateTime checkOut, int? excludeBookingId = null);
         Task<IEnumerable<Booking>> GetAllBookingsAsync();
         Task<Booking?> GetBookingByIdAsync(int bookingId);
-
+        Task<IEnumerable<Booking>> GetBookingPagedAsync(int page, int pageSize,int? hotelId,int? customerId,int? roomId, BookingStatus? status);
+        Task<int> CountFilteredAsync(int? hotelId, int? customerId, int? roomId, BookingStatus? status);
     }
 }

@@ -16,5 +16,6 @@ namespace HotelBooking.Domain.Interfaces
         Task<bool> ExistsByPhoneNumberAsync(string phoneNumber, int customerId);
         Task<Customer?> GetCustomerWithBookingsAsync(int customerId);
         Task<IEnumerable<Customer>> SearchCustomersAsync(string? name, string? email);
+
     }
 }

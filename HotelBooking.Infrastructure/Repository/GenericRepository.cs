@@ -1,4 +1,5 @@
-﻿using HotelBooking.Domain.Interfaces;
+﻿using HotelBooking.Domain.Entities;
+using HotelBooking.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -8,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace HotelBooking.Infrastructure.Repository
 {
-    public class GenericRepository<T> : IGenericRepositoy<T> where T : class
+    public class GenericRepository<T> : IGenericRepositoy<T> where T :  BaseEntity
     {
         private readonly ApplicationDBContext _dbContext;
         private readonly DbSet<T> _dbSet;
@@ -36,6 +37,16 @@ namespace HotelBooking.Infrastructure.Repository
         public async Task<T?> GetByIdAsync(int id)
         {
             return await _dbSet.FindAsync(id);
+        }
+
+        public async Task<int> GetCountAsync()
+        {
+            return await _dbSet.CountAsync();
+        }
+
+        public async Task<IEnumerable<T>> GetPagedAsync(int pageNumber, int size)
+        {
+            return await _dbSet.OrderBy(x => x.Id).Skip((pageNumber - 1) * size).Take(size).ToListAsync();
         }
 
         public void Remove(T entity)

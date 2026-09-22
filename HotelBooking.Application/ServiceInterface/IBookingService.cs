@@ -1,9 +1,12 @@
-﻿using HotelBooking.Application.DTOs.Booking;
+﻿using HotelBooking.Application.Common.Models;
+using HotelBooking.Application.DTOs.Booking;
+using HotelBooking.Application.DTOs.Room;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static HotelBooking.Domain.Entities.Booking;
 
 namespace HotelBooking.Application.ServiceInterface
 {
@@ -29,6 +32,7 @@ namespace HotelBooking.Application.ServiceInterface
         Task<bool> ConfirmAsync(int bookingId);
         Task<bool> CheckInAsync(int bookingId);
         Task<bool> CheckOutAsync(int bookingId);
+        Task<PagedResult<BookingResponseDTO>> GetPagedAsync(int page, int pageSize, int? hotelId, int? customerId, int? roomId, BookingStatus? status);
 
     }
 }

@@ -17,5 +17,7 @@ namespace HotelBooking.Domain.Interfaces
         Task<Room?> GetRoomWithBookingsAsync(int roomId);
         Task<IEnumerable<Room>> GetByHotelIdAsync(int hotelId);
         Task<bool> HasActiveRoomsAsync(int hotelId);
+        Task<IEnumerable<Room>> GetPagedByHotelAsync(int hotelId,int pageNumber,int pageSize);
+        Task<int> CountByHotelAsync(int hotelId);
     }
 }

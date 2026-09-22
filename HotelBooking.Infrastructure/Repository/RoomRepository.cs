@@ -3,6 +3,7 @@ using HotelBooking.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -78,6 +79,16 @@ namespace HotelBooking.Infrastructure.Repository
                     x.HotelId == hotelId &&
                     (x.Status == RoomStatus.Reserved ||
                      x.Status == RoomStatus.Occupied));
+        }
+
+        public async Task<IEnumerable<Room>> GetPagedByHotelAsync(int hotelId, int pageNumber, int pageSize)
+        {
+            return await _dbContext.Rooms.Where(x => x.HotelId == hotelId).OrderBy(x => x.Id).Skip((pageNumber - 1) * pageSize).Take(pageSize).ToListAsync();
+        }
+
+        public async Task<int> CountByHotelAsync(int hotelId)
+        {
+            return await _dbContext.Rooms.Where(x => x.HotelId == hotelId).CountAsync();
         }
     }
 }

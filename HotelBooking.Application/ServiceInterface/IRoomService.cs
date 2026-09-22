@@ -1,4 +1,6 @@
-﻿using HotelBooking.Application.DTOs.Room;
+﻿using HotelBooking.Application.Common.Models;
+using HotelBooking.Application.DTOs.Hotel;
+using HotelBooking.Application.DTOs.Room;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,6 +19,7 @@ namespace HotelBooking.Application.ServiceInterface
         Task<bool> DeleteAsync(int id);
         Task<bool> SetMaintenanceAsync(int roomId);
         Task<bool> SetAvailableAsync(int roomId);
+        Task<PagedResult<RoomResponseDTO>> GetPagedAsync(int hotelId, int page, int pageSize);
 
     }
 }

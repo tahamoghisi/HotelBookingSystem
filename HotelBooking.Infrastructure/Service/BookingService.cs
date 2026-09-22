@@ -1,5 +1,8 @@
-﻿using HotelBooking.Application.DTOs.Booking;
+﻿using HotelBooking.Application.Common.Models;
+using HotelBooking.Application.DTOs.Booking;
+using HotelBooking.Application.DTOs.Room;
 using HotelBooking.Application.Mapping.BookingMap;
+using HotelBooking.Application.Mapping.RoomMap;
 using HotelBooking.Application.ServiceInterface;
 using HotelBooking.Domain.Entities;
 using HotelBooking.Domain.Interfaces;
@@ -278,6 +281,20 @@ namespace HotelBooking.Infrastructure.Service
             await _unitOFWork.SaveChangesAsync();
 
             return true;
+        }
+
+        public async Task<PagedResult<BookingResponseDTO>> GetPagedAsync(int page, int pageSize, int? hotelId, int? customerId, int? roomId, BookingStatus? status)
+        {
+            var totalCount = await _unitOFWork.Bookings.CountFilteredAsync(hotelId,customerId,roomId,status);
+            var pageItems = await _unitOFWork.Bookings.GetBookingPagedAsync(page,pageSize,hotelId,customerId,roomId,status);
+            var dto = pageItems.Select(x => BookingMapping.ToDto(x)).ToList();
+            return new PagedResult<BookingResponseDTO>
+            {
+                Items = dto,
+                Page = page,
+                PageSize = pageSize,
+                TotalCount = totalCount
+            };
         }
     }
 }

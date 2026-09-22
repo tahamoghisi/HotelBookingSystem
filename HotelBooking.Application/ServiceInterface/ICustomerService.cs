@@ -1,4 +1,7 @@
-﻿using HotelBooking.Application.DTOs.Customer;
+﻿using HotelBooking.Application.Common.Models;
+using HotelBooking.Application.DTOs.Customer;
+using HotelBooking.Application.DTOs.Hotel;
+using HotelBooking.Application.DTOs.Room;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,9 +12,10 @@ namespace HotelBooking.Application.ServiceInterface
 {
     public interface ICustomerService
     {
-            Task<IEnumerable<CustomerResponseDTO>> GetAllAsync();
-            Task<CustomerResponseDTO?> GetByIdAsync(int id);
-            Task<bool> UpdateAsync(int id, UpdateCustomerDTO dto);
-            Task<bool> DeleteAsync(int id);
+        Task<IEnumerable<CustomerResponseDTO>> GetAllAsync();
+        Task<CustomerResponseDTO?> GetByIdAsync(int id);
+        Task<bool> UpdateAsync(int id, UpdateCustomerDTO dto);
+        Task<bool> DeleteAsync(int id);
+        Task<PagedResult<CustomerResponseDTO>> GetPagedAsync(int page, int pageSize);
     }
 }
