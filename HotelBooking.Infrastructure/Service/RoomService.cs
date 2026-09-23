@@ -114,6 +114,20 @@ namespace HotelBooking.Infrastructure.Service
                 TotalCount = totalCount
             };
         }
+        //صفخه بندی و تعداد کل و مرتب سازی
+        public async Task<PagedResult<RoomResponseDTO>> SearchPagedAsync(int? roomNumber, RoomStatus? status, PaginationRequest pagination, SortingRequest sorting)
+        {
+            var pageItems = await _unitOFWork.Rooms.SearchPagedAsync(roomNumber, status, pagination.Page, pagination.PageSize, sorting.SortBy, sorting.Descending);
+            var dto = pageItems.Items.Select(r => RoomMapping.ToDto(r)).ToList();
+            return new PagedResult<RoomResponseDTO>
+            {
+                Items = dto,
+                Page = pagination.Page,
+                PageSize = pagination.PageSize,
+                TotalCount = pageItems.TotalCount
+            };
+
+        }
         #region MaintenanceStatus
         public async Task<bool> SetMaintenanceAsync(int roomId)
         {
@@ -154,6 +168,8 @@ namespace HotelBooking.Infrastructure.Service
 
             return true;
         }
+
+
         #endregion
     }
 }

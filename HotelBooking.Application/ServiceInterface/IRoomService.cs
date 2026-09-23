@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static HotelBooking.Domain.Entities.Room;
 
 namespace HotelBooking.Application.ServiceInterface
 {
@@ -20,6 +21,8 @@ namespace HotelBooking.Application.ServiceInterface
         Task<bool> SetMaintenanceAsync(int roomId);
         Task<bool> SetAvailableAsync(int roomId);
         Task<PagedResult<RoomResponseDTO>> GetPagedAsync(int hotelId, int page, int pageSize);
+        Task<PagedResult<RoomResponseDTO>> SearchPagedAsync(int? roomNumber, RoomStatus? status, PaginationRequest pagination, SortingRequest sorting);// صرچ و صفحه بندی و مرتب سازی
+
 
     }
 }

@@ -296,5 +296,18 @@ namespace HotelBooking.Infrastructure.Service
                 TotalCount = totalCount
             };
         }
+        //صفخه بندی و تعداد کل و مرتب سازی
+        public async Task<PagedResult<BookingResponseDTO>> SearchPagedAsync(int? customerId, int? roomId, BookingStatus? status, DateTime? checkInFrom, DateTime? checkInTo, PaginationRequest pagination, SortingRequest sorting)
+        {
+            var pageItems = await _unitOFWork.Bookings.SearchPagedAsync(customerId, roomId, status, checkInFrom, checkInTo, pagination.Page, pagination.PageSize, sorting.SortBy, sorting.Descending);
+            var dto = pageItems.Items.Select(b => BookingMapping.ToDto(b)).ToList();
+            return new PagedResult<BookingResponseDTO>
+            {
+                Items = dto,
+                Page = pagination.Page,
+                PageSize = pagination.PageSize,
+                TotalCount = pageItems.TotalCount
+            };
+        }
     }
 }

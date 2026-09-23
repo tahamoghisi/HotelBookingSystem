@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using static HotelBooking.Domain.Entities.Booking;
+using static HotelBooking.Domain.Entities.Room;
 
 namespace HotelBooking.Domain.Interfaces
 {
@@ -23,5 +24,7 @@ namespace HotelBooking.Domain.Interfaces
         Task<Booking?> GetBookingByIdAsync(int bookingId);
         Task<IEnumerable<Booking>> GetBookingPagedAsync(int page, int pageSize,int? hotelId,int? customerId,int? roomId, BookingStatus? status);
         Task<int> CountFilteredAsync(int? hotelId, int? customerId, int? roomId, BookingStatus? status);
+        Task<(IEnumerable<Booking> Items, int TotalCount)> SearchPagedAsync(int? customerId,int? roomId ,BookingStatus? status , DateTime? checkInFrom, DateTime? checkInTo, int page, int pageSize, string? sortBy, bool descending); //صفخه بندی و تعداد کل و مرتب سازی
+
     }
 }

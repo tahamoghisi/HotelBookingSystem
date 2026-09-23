@@ -52,6 +52,29 @@ namespace HotelBooking.Infrastructure.Repository
             return await _dbContext.Customers.Include(c => c.Bookings)
                 .FirstOrDefaultAsync(x => x.Id == customerId);
         }
+        //صفخه بندی و تعداد کل و مرتب سازی
+
+        public async Task<(IEnumerable<Customer> Items, int TotalCount)> SearchPagedAsync(string? fullName, string? email, string? nationalCode, int page, int pageSize, string? sortBy, bool descending)
+        {
+            var query = _dbContext.Customers.AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(fullName))
+                query = query.Where(c => c.FullName.Contains(fullName));
+
+            if (!string.IsNullOrWhiteSpace(email))
+                query = query.Where(c => c.Email.Contains(email));
+
+            if (!string.IsNullOrWhiteSpace(nationalCode))
+                query = query.Where(c => c.NationalCode.Contains(nationalCode));
+
+
+            //var items = await query
+            //    .OrderBy(c => c.Id)
+            //    .Skip((page - 1) * pageSize)
+            //    .Take(pageSize)
+            //    .ToListAsync();
+            return await GetPagedTotalAsync(query, page, pageSize, sortBy, descending);
+        }
 
         public async Task<IEnumerable<Customer>> SearchCustomersAsync(string? name, string? email)
         {

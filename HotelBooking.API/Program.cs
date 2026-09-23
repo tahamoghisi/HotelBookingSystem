@@ -23,6 +23,8 @@ using System.Text.Json.Serialization;
 using HotelBooking.API.Middleware;
 using HotelBooking.Application.Validator.User;
 using HotelBooking.Application.Validator.Booking;
+using HotelBooking.Application.Validator.Pagging;
+using HotelBooking.Application.Validator.Sorting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -91,6 +93,13 @@ builder.Services.AddValidatorsFromAssemblyContaining<UpdateCustomerValidator>();
 builder.Services.AddValidatorsFromAssemblyContaining<CreateBookingValidator>();
 builder.Services.AddValidatorsFromAssemblyContaining<UpdateBookingValidator>();
 builder.Services.AddValidatorsFromAssemblyContaining<RegisterValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<PaginationRequestValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<HotelSortingValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<RoomSortingValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<CustomerSortingValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<BookingSortingValidator>();
+
+
 
 
 

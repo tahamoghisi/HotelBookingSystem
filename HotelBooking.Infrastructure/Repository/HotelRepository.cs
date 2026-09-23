@@ -111,5 +111,26 @@ namespace HotelBooking.Infrastructure.Repository
             }
             return await query.ToListAsync();
         }
+
+        //صفخه بندی و تعداد کل و مرتب سازی
+        public async Task<(IEnumerable<Hotel> Items, int TotalCount)> SearchPagedAsync(string? name, string? city, int page, int pageSize, string? sortBy, bool descending)
+        {
+            var query = _dbContext.Hotels.AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(name))
+                query = query.Where(h => h.Name.Contains(name));
+
+            if (!string.IsNullOrWhiteSpace(city))
+                query = query.Where(h => h.City.Contains(city));
+
+
+            //var items = await query
+            //    .OrderBy(h => h.Id)
+            //    .Skip((page - 1) * pageSize)
+            //    .Take(pageSize)
+            //    .ToListAsync();
+
+            return await GetPagedTotalAsync(query, page, pageSize,sortBy,descending);
+        }
     }
 }

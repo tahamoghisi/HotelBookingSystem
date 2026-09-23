@@ -17,5 +17,6 @@ namespace HotelBooking.Domain.Interfaces
         void Remove(T entity);
         Task<IEnumerable<T>> GetPagedAsync(int pageNumber, int size);
         Task<int> GetCountAsync();
+        Task<(IEnumerable<T>, int totalCount)> GetPagedTotalAsync(IQueryable<T> query, int page, int pageSize, string? sortBy, bool descending);//صفخه بندی و تعداد کل و مرتب سازی
     }
 }

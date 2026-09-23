@@ -46,18 +46,17 @@ namespace HotelBooking.Infrastructure.Service
             if (customer == null) return null;
             return CustomerMapping.ToDto(customer);
         }
-
-        public async Task<PagedResult<CustomerResponseDTO>> GetPagedAsync(int page, int pageSize)
+        //صفخه بندی و تعداد کل و مرتب سازی
+        public async Task<PagedResult<CustomerResponseDTO>> SearchPagedAsync(string? fullName, string? email, string? nationalCode, PaginationRequest pagination, SortingRequest sorting)
         {
-            var totalCount = await _unitOFWork.Customers.GetCountAsync();
-            var pageItems = await _unitOFWork.Customers.GetPagedAsync(page, pageSize);
-            var dto = pageItems.Select(x => CustomerMapping.ToDto(x)).ToList();
+            var pageItems = await _unitOFWork.Customers.SearchPagedAsync(fullName, email,nationalCode , pagination.Page, pagination.PageSize, sorting.SortBy, sorting.Descending);
+            var dto = pageItems.Items.Select(x => CustomerMapping.ToDto(x)).ToList();
             return new PagedResult<CustomerResponseDTO>
             {
                 Items = dto,
-                Page = page,
-                PageSize = pageSize,
-                TotalCount = totalCount
+                Page = pagination.Page,
+                PageSize = pagination.PageSize,
+                TotalCount = pageItems.TotalCount
             };
         }
 

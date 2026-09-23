@@ -1,5 +1,7 @@
-﻿using HotelBooking.Application.DTOs.Hotel;
+﻿using HotelBooking.Application.Common.Models;
+using HotelBooking.Application.DTOs.Hotel;
 using HotelBooking.Application.ServiceInterface;
+using HotelBooking.Infrastructure.Service;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -22,9 +24,24 @@ namespace HotelBooking.API.Controllers
             var hotels = await _hotelService.GetAllAsync();
             return Ok(hotels);
         }
+        //صفخه بندی و تعداد کل و مرتب سازی
+        [HttpGet("search")]
+        public async Task<IActionResult> Search(string? name, string? city, PaginationRequest pagination, SortingRequest sorting)
+        {
+            var result = await _hotelService.SearchPagedAsync(name, city, pagination, sorting);
+
+            return Ok(result);
+        }
         [HttpGet("paged")]
         public async Task<IActionResult> GetPaged(int page = 1, int pageSize = 10)
         {
+            if (page < 1)
+                return BadRequest("Page must be greater than 0.");
+
+            if (pageSize < 1)
+                return BadRequest("PageSize must be greater than 0.");
+            if (pageSize > 100)
+                return BadRequest("PageSize cannot be greater than 100.");
             var result = await _hotelService.GetPagedAsync(page, pageSize);
 
             return Ok(result);

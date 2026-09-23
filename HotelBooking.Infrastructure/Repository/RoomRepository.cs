@@ -90,5 +90,17 @@ namespace HotelBooking.Infrastructure.Repository
         {
             return await _dbContext.Rooms.Where(x => x.HotelId == hotelId).CountAsync();
         }
+        //صفخه بندی و تعداد کل و مرتب سازی
+
+        public async Task<(IEnumerable<Room> Items, int TotalCount)> SearchPagedAsync(int? roomNumber, RoomStatus? status, int page, int pageSize, string? sortBy , bool descending)
+        {
+            var query = _dbContext.Rooms.AsQueryable();
+            if (roomNumber.HasValue)
+                query = query.Where(r => r.RoomNumber == roomNumber.Value);
+            if (status.HasValue)
+                query = query.Where(r => r.Status == status);
+
+            return await GetPagedTotalAsync(query, page, pageSize, sortBy, descending);
+        }
     }
 }

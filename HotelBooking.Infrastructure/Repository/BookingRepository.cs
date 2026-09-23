@@ -165,5 +165,22 @@ namespace HotelBooking.Infrastructure.Repository
             }
             return await query.CountAsync();
         }
+        //صفخه بندی و تعداد کل و مرتب سازی
+
+        public async Task<(IEnumerable<Booking> Items, int TotalCount)> SearchPagedAsync(int? customerId, int? roomId, BookingStatus? status, DateTime? checkInFrom, DateTime? checkInTo, int page, int pageSize, string? sortBy, bool descending)
+        {
+            var query = _dbContext.Bookings.AsQueryable();
+            if (customerId.HasValue)
+                query = query.Where(b => b.CustomerId == customerId.Value);
+            if (roomId.HasValue)
+                query = query.Where(b => b.RoomId == roomId.Value);
+            if (status.HasValue)
+                query = query.Where(b => b.Status == status.Value);
+            if (checkInFrom.HasValue)
+                query = query.Where(b => b.CheckInDate >= checkInFrom.Value);
+            if (checkInTo.HasValue)
+                query = query.Where(b => b.CheckInDate <= checkInTo.Value);
+            return await GetPagedTotalAsync(query, page, pageSize, sortBy, descending);
+        }
     }
 }

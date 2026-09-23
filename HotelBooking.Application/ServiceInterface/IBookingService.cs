@@ -1,5 +1,6 @@
 ﻿using HotelBooking.Application.Common.Models;
 using HotelBooking.Application.DTOs.Booking;
+using HotelBooking.Application.DTOs.Customer;
 using HotelBooking.Application.DTOs.Room;
 using System;
 using System.Collections.Generic;
@@ -33,6 +34,8 @@ namespace HotelBooking.Application.ServiceInterface
         Task<bool> CheckInAsync(int bookingId);
         Task<bool> CheckOutAsync(int bookingId);
         Task<PagedResult<BookingResponseDTO>> GetPagedAsync(int page, int pageSize, int? hotelId, int? customerId, int? roomId, BookingStatus? status);
+        Task<PagedResult<BookingResponseDTO>> SearchPagedAsync(int? customerId, int? roomId, BookingStatus? status, DateTime? checkInFrom, DateTime? checkInTo, PaginationRequest pagination, SortingRequest sorting);//صفخه بندی و تعداد کل و مرتب سازی
+
 
     }
 }

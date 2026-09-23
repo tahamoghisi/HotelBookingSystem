@@ -1,6 +1,8 @@
 ﻿using HotelBooking.Application.Common.Models;
+using HotelBooking.Application.DTOs.Customer;
 using HotelBooking.Application.DTOs.Hotel;
 using HotelBooking.Application.DTOs.Room;
+using HotelBooking.Application.Mapping.CustomerMap;
 using HotelBooking.Application.Mapping.HotelMap;
 using HotelBooking.Application.Mapping.RoomMap;
 using HotelBooking.Application.ServiceInterface;
@@ -105,6 +107,19 @@ namespace HotelBooking.Infrastructure.Service
                 Page = page,
                 PageSize = pageSize,
                 TotalCount = totalCount
+            };
+        }
+        //صفخه بندی و تعداد کل و مرتب سازی
+        public async Task<PagedResult<HotelResponseDTO>> SearchPagedAsync(string? name, string? city, PaginationRequest pagination, SortingRequest sorting)
+        {
+            var pageItems = await _unitOFWork.Hotels.SearchPagedAsync(name, city, pagination.Page, pagination.PageSize, sorting.SortBy, sorting.Descending);
+            var dto = pageItems.Items.Select(x => HotelMapping.ToDto(x)).ToList();
+            return new PagedResult<HotelResponseDTO>
+            {
+                Items = dto,
+                Page = pagination.Page,
+                PageSize = pagination.PageSize,
+                TotalCount = pageItems.TotalCount
             };
         }
     }
