@@ -169,7 +169,7 @@ namespace HotelBooking.Infrastructure.Repository
 
         public async Task<(IEnumerable<Booking> Items, int TotalCount)> SearchPagedAsync(int? customerId, int? roomId, BookingStatus? status, DateTime? checkInFrom, DateTime? checkInTo, int page, int pageSize, string? sortBy, bool descending)
         {
-            var query = _dbContext.Bookings.AsQueryable();
+            var query = _dbContext.Bookings.Include(x => x.Room).Include(x => x.Customer).Include(x => x.Hotel).AsQueryable();
             if (customerId.HasValue)
                 query = query.Where(b => b.CustomerId == customerId.Value);
             if (roomId.HasValue)

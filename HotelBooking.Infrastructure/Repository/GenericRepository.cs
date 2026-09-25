@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace HotelBooking.Infrastructure.Repository
 {
-    public class GenericRepository<T> : IGenericRepositoy<T> where T :  BaseEntity
+    public class GenericRepository<T> : IGenericRepositoy<T> where T : BaseEntity
     {
         private readonly ApplicationDBContext _dbContext;
         private readonly DbSet<T> _dbSet;
@@ -66,16 +66,16 @@ namespace HotelBooking.Infrastructure.Repository
                     throw new ArgumentException($"Invalid sort field: {sortBy}");
 
                 query = descending
-                    ? query.OrderByDescending(x => property.GetValue(x))
-                    : query.OrderBy(x => property.GetValue(x));
+                 ? query.OrderByDescending(x => EF.Property<object>(x, property.Name))
+                 : query.OrderBy(x => EF.Property<object>(x, property.Name));
             }
             else
             {
                 query = query.OrderBy(x => x.Id);
             }
-            var items = await query.OrderBy(x => x.Id).Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
-            var totalCount = await _dbSet.CountAsync();
-            return (items ,  totalCount);   
+            var totalCount = await query.CountAsync();
+            var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
+            return (items, totalCount);
         }
 
         public void Remove(T entity)

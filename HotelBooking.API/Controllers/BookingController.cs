@@ -27,7 +27,7 @@ namespace HotelBooking.API.Controllers
         }
         //صفخه بندی و تعداد کل و مرتب سازی
         [HttpGet("search")]
-        public async Task<IActionResult> Search(int? customerId, int? roomId, BookingStatus? status, DateTime? checkInFrom, DateTime? checkInTo, PaginationRequest pagination, SortingRequest sorting)
+        public async Task<IActionResult> Search([FromQuery] int? customerId, [FromQuery] int? roomId, [FromQuery] BookingStatus? status, [FromQuery] DateTime? checkInFrom, [FromQuery] DateTime? checkInTo, [FromQuery] PaginationRequest pagination, [FromQuery] SortingRequest sorting)
         {
             var result = await _bookingService.SearchPagedAsync(customerId, roomId, status, checkInFrom, checkInTo, pagination, sorting);
 
