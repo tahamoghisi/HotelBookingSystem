@@ -113,7 +113,7 @@ namespace HotelBooking.Infrastructure.Repository
         }
 
         //صفخه بندی و تعداد کل و مرتب سازی
-        public async Task<(IEnumerable<Hotel> Items, int TotalCount)> SearchPagedAsync(string? name, string? city, int page, int pageSize, string? sortBy, bool descending)
+        public async Task<(IEnumerable<Hotel> Items, int TotalCount)> SearchPagedAsync(string? name, string? city, int? minStarRating, int page, int pageSize, string? sortBy, bool descending)
         {
             var query = _dbContext.Hotels.AsQueryable();
 
@@ -122,15 +122,19 @@ namespace HotelBooking.Infrastructure.Repository
 
             if (!string.IsNullOrWhiteSpace(city))
                 query = query.Where(h => h.City.Contains(city));
+            if (minStarRating.HasValue)
+            {
+                query = query.Where(h => h.StarRating >= minStarRating.Value);
+            }
 
 
-            //var items = await query
-            //    .OrderBy(h => h.Id)
-            //    .Skip((page - 1) * pageSize)
-            //    .Take(pageSize)
-            //    .ToListAsync();
+                //var items = await query
+                //    .OrderBy(h => h.Id)
+                //    .Skip((page - 1) * pageSize)
+                //    .Take(pageSize)
+                //    .ToListAsync();
 
-            return await GetPagedTotalAsync(query, page, pageSize,sortBy,descending);
+                return await GetPagedTotalAsync(query, page, pageSize,sortBy,descending);
         }
     }
 }

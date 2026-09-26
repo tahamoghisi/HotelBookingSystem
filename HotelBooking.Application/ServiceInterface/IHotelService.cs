@@ -23,7 +23,7 @@ namespace HotelBooking.Application.ServiceInterface
         Task<bool> DeleteAsync(int id);
         Task<IEnumerable<RoomResponseDTO>> GetHotelRoomsAsync(int hotelId);
         Task<PagedResult<HotelResponseDTO>> GetPagedAsync(int page, int pageSize);
-        Task<PagedResult<HotelResponseDTO>> SearchPagedAsync(string? name, string? city, PaginationRequest pagination, SortingRequest sorting);//صفخه بندی و تعداد کل و مرتب سازی
+        Task<PagedResult<HotelResponseDTO>> SearchPagedAsync(string? name, string? city, int? minStarRating, PaginationRequest pagination, SortingRequest sorting);//صفخه بندی و تعداد کل و مرتب سازی
 
     }
 }

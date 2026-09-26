@@ -1,9 +1,11 @@
 ﻿using HotelBooking.Application.Common.Models;
 using HotelBooking.Application.DTOs.Customer;
 using HotelBooking.Application.ServiceInterface;
+using HotelBooking.Domain.Entities;
 using HotelBooking.Infrastructure.Service;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace HotelBooking.API.Controllers
 {
@@ -17,7 +19,7 @@ namespace HotelBooking.API.Controllers
         {
             _customerService = customerService;
         }
-
+        [Authorize(Roles = "Admin")]
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -25,6 +27,7 @@ namespace HotelBooking.API.Controllers
             return Ok(customers);
         }
         //صفخه بندی و تعداد کل و مرتب سازی
+        [Authorize(Roles = "Admin")]
         [HttpGet("search")]
         public async Task<IActionResult> Search([FromQuery] string? fullName, [FromQuery] string? email, [FromQuery] string? nationalCode, [FromQuery] PaginationRequest pagination, [FromQuery] SortingRequest sorting)
         {
@@ -32,7 +35,7 @@ namespace HotelBooking.API.Controllers
 
             return Ok(result);
         }
-
+        [Authorize(Roles = "Admin")]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
@@ -50,11 +53,9 @@ namespace HotelBooking.API.Controllers
         //    var customer = await _customerService.CreateAsync(dto);
         //    return Ok(customer);
         //}
-
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(
-            int id,
-            UpdateCustomerDTO dto)
+        public async Task<IActionResult> Update(int id,UpdateCustomerDTO dto)
         {
             var result = await _customerService.UpdateAsync(id, dto);
 
@@ -63,7 +64,7 @@ namespace HotelBooking.API.Controllers
 
             return NoContent();
         }
-
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
@@ -73,6 +74,34 @@ namespace HotelBooking.API.Controllers
                 return NotFound();
 
             return NoContent();
+        }
+        [Authorize]
+        [HttpGet("me")]
+        public async Task<IActionResult> ME()
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var customer = await _customerService.GetByUserIdAsync(userId);
+
+            if (customer == null)
+                return NotFound();
+
+            return Ok(customer);
+        }
+        [Authorize]
+        [HttpPut("me")]
+        public async Task<IActionResult> UpdateME(UpdateCustomerDTO dto)
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var customer = await _customerService.GetByUserIdAsync(userId);
+
+            if (customer == null)
+                return NotFound();
+            await _customerService.UpdateAsync(customer.Id, dto);
+
+            var updatedCustomer = await _customerService.GetByUserIdAsync(userId);
+
+
+            return Ok(updatedCustomer);
         }
     }
 }

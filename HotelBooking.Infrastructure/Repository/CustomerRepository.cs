@@ -89,5 +89,10 @@ namespace HotelBooking.Infrastructure.Repository
             }
             return await query.ToListAsync();
         }
+
+        public async Task<Customer?> GetByUserIdAsync(int userId)
+        {
+            return await _dbContext.Customers.FirstOrDefaultAsync(c => c.UserId == userId);
+        }
     }
 }

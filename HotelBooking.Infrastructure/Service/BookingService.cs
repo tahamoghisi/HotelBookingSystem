@@ -57,7 +57,7 @@ namespace HotelBooking.Infrastructure.Service
             return true;
         }
 
-        public async Task<BookingResponseDTO> CreateAsync(CreateBookingDTO dto)
+        public async Task<BookingResponseDTO> CreateAsync(CreateBookingDTO dto, int userId)
         {
             var room = await _unitOFWork.Rooms.GetByIdAsync(dto.RoomId);
             if (room == null)
@@ -69,7 +69,7 @@ namespace HotelBooking.Infrastructure.Service
                 throw new ArgumentException(
                     "Check-out date must be after check-in date.");
             }
-            var customer = await _unitOFWork.Customers.GetByIdAsync(dto.CustomerId);
+            var customer = await _unitOFWork.Customers.GetByUserIdAsync(userId);
             if (customer == null)
             {
                 throw new ArgumentException("Customer Not Found!");
@@ -82,9 +82,10 @@ namespace HotelBooking.Infrastructure.Service
             var available = await _unitOFWork.Rooms.IsRoomAvailableAsync(dto.RoomId, dto.CheckInDate, dto.CheckOutDate);
             if (!available)
             {
-                throw new Exception("Room is not available for the selected dates.");
+                throw new InvalidOperationException("Room is not available for the selected dates.");
             }
             var booking = BookingMapping.ToEntity(dto);
+            booking.CustomerId = customer.Id;
             booking.Status = BookingStatus.Pending;
             //محاسبه ی مبلغ کل
             var nights = (dto.CheckOutDate - dto.CheckInDate).Days;
@@ -108,9 +109,11 @@ namespace HotelBooking.Infrastructure.Service
             return result;
         }
 
-        public async Task<IEnumerable<BookingResponseDTO>> GetByCustomerIdAsync(int customerId)
+        public async Task<IEnumerable<BookingResponseDTO>?> GetByUserIdAsync(int userId)
         {
-            var booking = await _unitOFWork.Bookings.GetByCustomerIdAsync(customerId);
+            var customer = await _unitOFWork.Customers.GetByUserIdAsync(userId);
+            if (customer == null) return null;
+            var booking = await _unitOFWork.Bookings.GetByCustomerIdAsync(customer.Id);
             if (!booking.Any())
                 return Enumerable.Empty<BookingResponseDTO>();
             var result = booking
@@ -308,6 +311,16 @@ namespace HotelBooking.Infrastructure.Service
                 PageSize = pagination.PageSize,
                 TotalCount = pageItems.TotalCount
             };
+        }
+
+        public async Task<BookingResponseDTO?> GetByIdForUserAsync(int bookingId, int userId)
+        {
+            var customer = await _unitOFWork.Customers.GetByUserIdAsync(userId);
+            if (customer == null) return null;
+            var booking = await _unitOFWork.Bookings.GetBookingByIdAsync(bookingId);
+            if (booking == null) return null;
+            if (booking.CustomerId !=  customer.Id) return null;
+            return BookingMapping.ToDto(booking);
         }
     }
 }

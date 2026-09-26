@@ -18,7 +18,7 @@ namespace HotelBooking.Domain.Interfaces
         Task<IEnumerable<Hotel>> SearchHotelsAsync(string? name,string? city,int? minStars);
         Task<bool> ExistsByNameAsync(string name);
         Task<IEnumerable<Hotel>> GetHotelsWithAvailableRoomsAsync(DateTime checkIn,DateTime checkOut);
-        Task<(IEnumerable<Hotel> Items, int TotalCount)> SearchPagedAsync(string? name, string? city, int page, int pageSize, string? sortBy, bool descending);//صفخه بندی و تعداد کل و مرتب سازی
+        Task<(IEnumerable<Hotel> Items, int TotalCount)> SearchPagedAsync(string? name, string? city, int? minStarRating, int page, int pageSize, string? sortBy, bool descending);//صفخه بندی و تعداد کل و مرتب سازی
 
     }
 }

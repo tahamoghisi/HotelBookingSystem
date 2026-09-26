@@ -20,7 +20,7 @@ namespace HotelBooking.Domain.Interfaces
         Task<bool> HasActiveRoomsAsync(int hotelId);
         Task<IEnumerable<Room>> GetPagedByHotelAsync(int hotelId,int pageNumber,int pageSize);
         Task<int> CountByHotelAsync(int hotelId);
-        Task<(IEnumerable<Room> Items, int TotalCount)> SearchPagedAsync(int? roomNumber, RoomStatus? status, int page, int pageSize, string? sortBy, bool descending);//صفخه بندی و تعداد کل و مرتب سازی
+        Task<(IEnumerable<Room> Items, int TotalCount)> SearchPagedAsync(int? hotelId,int? roomNumber, RoomStatus? status, int? MinPrice, int? maxPrice, int page, int pageSize, string? sortBy, bool descending);//صفخه بندی و تعداد کل و مرتب سازی
 
     }
 }

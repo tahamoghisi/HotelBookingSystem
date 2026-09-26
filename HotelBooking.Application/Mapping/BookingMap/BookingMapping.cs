@@ -36,7 +36,7 @@ namespace HotelBooking.Application.Mapping.BookingMap
         {
             return new Booking
             {
-                CustomerId = dto.CustomerId,
+                //CustomerId = dto.CustomerId,
                 RoomId = dto.RoomId,
                 HotelId = dto.HotelId,
                 CheckInDate = dto.CheckInDate,

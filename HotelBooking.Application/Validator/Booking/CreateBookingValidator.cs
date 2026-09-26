@@ -12,9 +12,9 @@ namespace HotelBooking.Application.Validator.Booking
     {
         public CreateBookingValidator()
         {
-            RuleFor(x => x.CustomerId)
-                .GreaterThan(0)
-                .WithMessage("CustomerId must be greater than 0.");
+            //RuleFor(x => x.CustomerId)
+            //    .GreaterThan(0)
+            //    .WithMessage("CustomerId must be greater than 0.");
 
             RuleFor(x => x.HotelId)
                 .GreaterThan(0)

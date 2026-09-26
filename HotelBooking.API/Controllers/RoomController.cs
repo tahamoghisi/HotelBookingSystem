@@ -27,14 +27,14 @@ namespace HotelBooking.API.Controllers
         }
         //صفخه بندی و تعداد کل و مرتب سازی
         [HttpGet("search")]
-        public async Task<IActionResult> Search([FromQuery] int? roomNumber, [FromQuery] RoomStatus? status, [FromQuery] PaginationRequest pagination, [FromQuery] SortingRequest sorting)
+        public async Task<IActionResult> Search([FromQuery] int? hotelId, [FromQuery] int? roomNumber, [FromQuery] RoomStatus? status, [FromQuery] int? minPrice, [FromQuery] int? maxPrice, [FromQuery] PaginationRequest pagination, [FromQuery] SortingRequest sorting)
         {
-            var result = await _roomService.SearchPagedAsync(roomNumber, status, pagination, sorting);
+            var result = await _roomService.SearchPagedAsync(hotelId, roomNumber, status, minPrice, maxPrice, pagination, sorting);
 
             return Ok(result);
         }
         [HttpGet("paged")]
-        public async Task<IActionResult> GetPaged(int hotelId,  int page = 1, int pageSize = 10)
+        public async Task<IActionResult> GetPaged(int hotelId, int page = 1, int pageSize = 10)
         {
             if (page < 1)
                 return BadRequest("Page must be greater than 0.");

@@ -92,13 +92,19 @@ namespace HotelBooking.Infrastructure.Repository
         }
         //صفخه بندی و تعداد کل و مرتب سازی
 
-        public async Task<(IEnumerable<Room> Items, int TotalCount)> SearchPagedAsync(int? roomNumber, RoomStatus? status, int page, int pageSize, string? sortBy , bool descending)
+        public async Task<(IEnumerable<Room> Items, int TotalCount)> SearchPagedAsync(int? hotelId, int? roomNumber, RoomStatus? status, int? MinPrice, int? maxPrice, int page, int pageSize, string? sortBy , bool descending)
         {
             var query = _dbContext.Rooms.AsQueryable();
+            if (hotelId.HasValue)
+                query = query.Where(r => r.HotelId == hotelId.Value);
             if (roomNumber.HasValue)
                 query = query.Where(r => r.RoomNumber == roomNumber.Value);
             if (status.HasValue)
                 query = query.Where(r => r.Status == status);
+            if (MinPrice.HasValue)
+                query = query.Where(r => r.PricePerNight >= MinPrice.Value);
+            if (maxPrice.HasValue)
+                query = query.Where(r => r.PricePerNight <= maxPrice.Value);
 
             return await GetPagedTotalAsync(query, page, pageSize, sortBy, descending);
         }

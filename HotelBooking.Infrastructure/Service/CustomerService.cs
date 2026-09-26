@@ -46,6 +46,14 @@ namespace HotelBooking.Infrastructure.Service
             if (customer == null) return null;
             return CustomerMapping.ToDto(customer);
         }
+
+        public async Task<CustomerResponseDTO?> GetByUserIdAsync(int userId)
+        {
+            var customer = await _unitOFWork.Customers.GetByUserIdAsync(userId);
+            if (customer == null) return null;
+            return CustomerMapping.ToDto(customer);
+        }
+
         //صفخه بندی و تعداد کل و مرتب سازی
         public async Task<PagedResult<CustomerResponseDTO>> SearchPagedAsync(string? fullName, string? email, string? nationalCode, PaginationRequest pagination, SortingRequest sorting)
         {

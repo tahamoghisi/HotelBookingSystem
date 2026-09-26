@@ -110,9 +110,9 @@ namespace HotelBooking.Infrastructure.Service
             };
         }
         //صفخه بندی و تعداد کل و مرتب سازی
-        public async Task<PagedResult<HotelResponseDTO>> SearchPagedAsync(string? name, string? city, PaginationRequest pagination, SortingRequest sorting)
+        public async Task<PagedResult<HotelResponseDTO>> SearchPagedAsync(string? name, string? city, int? minStarRating, PaginationRequest pagination, SortingRequest sorting)
         {
-            var pageItems = await _unitOFWork.Hotels.SearchPagedAsync(name, city, pagination.Page, pagination.PageSize, sorting.SortBy, sorting.Descending);
+            var pageItems = await _unitOFWork.Hotels.SearchPagedAsync(name, city, minStarRating,pagination.Page, pagination.PageSize, sorting.SortBy, sorting.Descending);
             var dto = pageItems.Items.Select(x => HotelMapping.ToDto(x)).ToList();
             return new PagedResult<HotelResponseDTO>
             {

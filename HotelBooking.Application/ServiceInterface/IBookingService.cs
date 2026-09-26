@@ -17,10 +17,11 @@ namespace HotelBooking.Application.ServiceInterface
 
         Task<BookingResponseDTO?> GetByIdAsync(int id);
 
-        Task<IEnumerable<BookingResponseDTO>> GetByCustomerIdAsync(int customerId);
+        Task<IEnumerable<BookingResponseDTO>?> GetByUserIdAsync(int userId);
+        Task<BookingResponseDTO?> GetByIdForUserAsync(int bookingId, int userId);
 
         Task<IEnumerable<BookingResponseDTO>> GetByRoomIdAsync(int roomId);
-        Task<BookingResponseDTO> CreateAsync(CreateBookingDTO dto);
+        Task<BookingResponseDTO> CreateAsync(CreateBookingDTO dto, int userId);
 
         Task<bool> UpdateAsync(int id, UpdateBookingDTO dto);
 

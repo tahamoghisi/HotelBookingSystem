@@ -10,6 +10,7 @@ namespace HotelBooking.Domain.Interfaces
     public interface ICustomerRepository : IGenericRepositoy<Customer>
     {
         Task<Customer?> GetByEmailAsync(string email);
+        Task<Customer?> GetByUserIdAsync(int userId);
         Task<Customer?> GetByNationalCodeAsync(string nationalCode);
         Task<bool> ExistsByEmailAsync(string email, int customerId);
         Task<bool> ExistsByNationalCodeAsync(string nationalCode, int customerId);

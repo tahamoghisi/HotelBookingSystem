@@ -14,6 +14,7 @@ namespace HotelBooking.Application.ServiceInterface
     {
         Task<IEnumerable<CustomerResponseDTO>> GetAllAsync();
         Task<CustomerResponseDTO?> GetByIdAsync(int id);
+        Task<CustomerResponseDTO?> GetByUserIdAsync(int userId);
         Task<bool> UpdateAsync(int id, UpdateCustomerDTO dto);
         Task<bool> DeleteAsync(int id);
         Task<PagedResult<CustomerResponseDTO>> SearchPagedAsync(string? fullName, string? email, string? nationalCode, PaginationRequest pagination, SortingRequest sorting);//صفخه بندی و تعداد کل و مرتب سازی

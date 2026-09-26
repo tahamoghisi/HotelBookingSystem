@@ -10,7 +10,7 @@ namespace HotelBooking.Application.DTOs.Booking
 {
     public class CreateBookingDTO
     {
-        public int CustomerId { get; set; }
+        //public int CustomerId { get; set; }
         public DateTime CheckInDate { get; set; }
         public DateTime CheckOutDate { get; set; }
         public int RoomId { get; set; }

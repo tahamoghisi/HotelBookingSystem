@@ -21,7 +21,7 @@ namespace HotelBooking.Application.ServiceInterface
         Task<bool> SetMaintenanceAsync(int roomId);
         Task<bool> SetAvailableAsync(int roomId);
         Task<PagedResult<RoomResponseDTO>> GetPagedAsync(int hotelId, int page, int pageSize);
-        Task<PagedResult<RoomResponseDTO>> SearchPagedAsync(int? roomNumber, RoomStatus? status, PaginationRequest pagination, SortingRequest sorting);// صرچ و صفحه بندی و مرتب سازی
+        Task<PagedResult<RoomResponseDTO>> SearchPagedAsync(int? hotelId,int? roomNumber, RoomStatus? status, int? MinPrice, int? maxPrice,PaginationRequest pagination, SortingRequest sorting);// صرچ و صفحه بندی و مرتب سازی
 
 
     }

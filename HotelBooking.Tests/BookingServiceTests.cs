@@ -110,9 +110,10 @@ namespace HotelBooking.Tests
         [Fact]
         public async Task CreateAsync_Should_Throw_When_CheckInDate_Is_After_CheckOutDate()
         {
+            int userId = 2;
             var createBookingDto = new CreateBookingDTO
             {
-                CustomerId = 2,
+                //CustomerId = 2,
                 CheckInDate = new DateTime(2026, 9, 20),
                 CheckOutDate = new DateTime(2026, 9, 18),
                 RoomId = 2,
@@ -128,15 +129,16 @@ namespace HotelBooking.Tests
 
             var service = new BookingService(unitOfWork.Object);
 
-            var exception = await Assert.ThrowsAsync<ArgumentException>(() => service.CreateAsync(createBookingDto));
+            var exception = await Assert.ThrowsAsync<ArgumentException>(() => service.CreateAsync(createBookingDto, userId));
         }
 
         [Fact]
         public async Task CreateAsync_Should_Create_Booking_When_Data_Is_Valid()
         {
+            int userId = 2;
             var createBookingDto = new CreateBookingDTO
             {
-                CustomerId = 2,
+                //CustomerId = 2,
                 CheckInDate = new DateTime(2026, 9, 20),
                 CheckOutDate = new DateTime(2026, 9, 23),
                 RoomId = 2,
@@ -165,7 +167,7 @@ namespace HotelBooking.Tests
                 .ReturnsAsync(room);
             unitOfWork.Setup(x => x.Hotels.GetByIdAsync(2))
                 .ReturnsAsync(hotel);
-            unitOfWork.Setup(x => x.Customers.GetByIdAsync(2))
+            unitOfWork.Setup(x => x.Customers.GetByUserIdAsync(userId))
                 .ReturnsAsync(customer);
             unitOfWork.Setup(x => x.Rooms.IsRoomAvailableAsync(
                     2,
@@ -175,10 +177,11 @@ namespace HotelBooking.Tests
 
             var service = new BookingService(unitOfWork.Object);
 
-            var result = await service.CreateAsync(createBookingDto);
+            var result = await service.CreateAsync(createBookingDto, userId);
 
             Assert.Equal(BookingStatus.Pending, result.Status);
             Assert.Equal(300, result.TotalPrice);
+            Assert.Equal(customer.Id, result.CustomerId);
 
         }
     }
