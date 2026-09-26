@@ -8,6 +8,7 @@ using HotelBooking.Domain.Entities;
 using HotelBooking.Domain.Interfaces;
 using HotelBooking.Infrastructure.Repository;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,8 +22,10 @@ namespace HotelBooking.Infrastructure.Service
     public class BookingService : IBookingService
     {
         private readonly IUnitOFWork _unitOFWork;
-        public BookingService(IUnitOFWork unitOFWork)
+        private readonly ILogger<BookingService> _logger;
+        public BookingService(IUnitOFWork unitOFWork,ILogger<BookingService> logger)
         {
+            _logger = logger;
             _unitOFWork = unitOFWork;
         }
         public async Task<bool> CancelAsync(int id)
@@ -62,26 +65,31 @@ namespace HotelBooking.Infrastructure.Service
             var room = await _unitOFWork.Rooms.GetByIdAsync(dto.RoomId);
             if (room == null)
             {
+                _logger.LogWarning("Room {RoomId} not found for User {UserId}",dto.RoomId,userId);
                 throw new ArgumentException("Room Not Found!");
             }
             if (dto.CheckInDate >= dto.CheckOutDate)
             {
+                _logger.LogWarning("Invalid booking dates provided by User {UserId}. CheckIn: {CheckIn}, CheckOut: {CheckOut}.",userId,dto.CheckInDate,dto.CheckOutDate);
                 throw new ArgumentException(
                     "Check-out date must be after check-in date.");
             }
             var customer = await _unitOFWork.Customers.GetByUserIdAsync(userId);
             if (customer == null)
             {
+                _logger.LogWarning("Customer not found for User {UserId}", userId);
                 throw new ArgumentException("Customer Not Found!");
             }
             var hotel = await _unitOFWork.Hotels.GetByIdAsync(dto.HotelId);
             if (hotel == null)
             {
+                _logger.LogWarning("Hotel {HotelId} not found for User {UserId}",dto.HotelId,userId);
                 throw new ArgumentException("Hotel Not Found!");
             }
             var available = await _unitOFWork.Rooms.IsRoomAvailableAsync(dto.RoomId, dto.CheckInDate, dto.CheckOutDate);
             if (!available)
             {
+                _logger.LogWarning("Room {RoomId} is not available for User {UserId}.",dto.RoomId,userId);
                 throw new InvalidOperationException("Room is not available for the selected dates.");
             }
             var booking = BookingMapping.ToEntity(dto);
@@ -94,6 +102,7 @@ namespace HotelBooking.Infrastructure.Service
 
             await _unitOFWork.Bookings.AddAsync(booking);
             await _unitOFWork.SaveChangesAsync();
+            _logger.LogInformation("Booking {BookingId} created successfully by User {UserId}.",booking.Id,userId);
             var response = BookingMapping.ToDto(booking);
             return response;
         }

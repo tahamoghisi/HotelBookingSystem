@@ -3,6 +3,7 @@ using HotelBooking.Application.Mapping.BookingMap;
 using HotelBooking.Domain.Entities;
 using HotelBooking.Domain.Interfaces;
 using HotelBooking.Infrastructure.Service;
+using Microsoft.Extensions.Logging;
 using Moq;
 using System;
 using System.Collections.Generic;
@@ -33,6 +34,8 @@ namespace HotelBooking.Tests
                 Status = RoomStatus.Available
             };
             var unitOfWork = new Mock<IUnitOFWork>();
+            var logger = new Mock<ILogger<BookingService>>();
+
 
             unitOfWork.Setup(x => x.Bookings.GetByIdAsync(1))
                 .ReturnsAsync(booking);
@@ -44,7 +47,7 @@ namespace HotelBooking.Tests
                     booking.CheckOutDate,
                     1))
                 .ReturnsAsync(true);
-            var service = new BookingService(unitOfWork.Object);
+            var service = new BookingService(unitOfWork.Object, logger.Object);
             // Act
             var result = await service.ConfirmAsync(1);
 
@@ -70,13 +73,15 @@ namespace HotelBooking.Tests
                 Status = RoomStatus.Reserved
             };
             var unitOfWork = new Mock<IUnitOFWork>();
+            var logger = new Mock<ILogger<BookingService>>();
+
 
             unitOfWork.Setup(x => x.Bookings.GetByIdAsync(1))
                 .ReturnsAsync(booking);
             unitOfWork.Setup(x => x.Rooms.GetByIdAsync(10))
                 .ReturnsAsync(room);
 
-            var service = new BookingService(unitOfWork.Object);
+            var service = new BookingService(unitOfWork.Object, logger.Object);
 
             var result = await service.CancelAsync(1);
 
@@ -96,11 +101,13 @@ namespace HotelBooking.Tests
             };
 
             var unitOfWork = new Mock<IUnitOFWork>();
+            var logger = new Mock<ILogger<BookingService>>();
+
 
             unitOfWork.Setup(x => x.Bookings.GetByIdAsync(1))
                 .ReturnsAsync(booking);
 
-            var service = new BookingService(unitOfWork.Object);
+            var service = new BookingService(unitOfWork.Object, logger.Object);
 
             var result = await service.CancelAsync(1);
 
@@ -120,6 +127,8 @@ namespace HotelBooking.Tests
                 HotelId = 2
             };
             var unitOfWork = new Mock<IUnitOFWork>();
+            var logger = new Mock<ILogger<BookingService>>();
+
 
             unitOfWork.Setup(x => x.Rooms.GetByIdAsync(2))
                   .ReturnsAsync(new Room
@@ -127,7 +136,7 @@ namespace HotelBooking.Tests
                       Id = 2
                   });
 
-            var service = new BookingService(unitOfWork.Object);
+            var service = new BookingService(unitOfWork.Object, logger.Object);
 
             var exception = await Assert.ThrowsAsync<ArgumentException>(() => service.CreateAsync(createBookingDto, userId));
         }
@@ -162,6 +171,8 @@ namespace HotelBooking.Tests
 
 
             var unitOfWork = new Mock<IUnitOFWork>();
+            var logger = new Mock<ILogger<BookingService>>();
+
 
             unitOfWork.Setup(x => x.Rooms.GetByIdAsync(2))
                 .ReturnsAsync(room);
@@ -175,7 +186,7 @@ namespace HotelBooking.Tests
                     createBookingDto.CheckOutDate))
                 .ReturnsAsync(true);
 
-            var service = new BookingService(unitOfWork.Object);
+            var service = new BookingService(unitOfWork.Object,logger.Object);
 
             var result = await service.CreateAsync(createBookingDto, userId);
 
