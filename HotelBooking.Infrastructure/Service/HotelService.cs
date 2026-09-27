@@ -8,6 +8,7 @@ using HotelBooking.Application.Mapping.RoomMap;
 using HotelBooking.Application.ServiceInterface;
 using HotelBooking.Domain.Entities;
 using HotelBooking.Domain.Interfaces;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Metrics;
@@ -21,8 +22,10 @@ namespace HotelBooking.Infrastructure.Service
     public class HotelService : IHotelService
     {
         private readonly IUnitOFWork _unitOFWork;
-        public HotelService(IUnitOFWork unitOFWork)
+        private readonly ILogger<HotelService> _logger;
+        public HotelService(IUnitOFWork unitOFWork, ILogger<HotelService> logger)
         {
+            _logger = logger;
             _unitOFWork = unitOFWork;
         }
         public async Task<HotelResponseDTO> CreateAsync(CreateHotelDTO dto)
@@ -31,6 +34,7 @@ namespace HotelBooking.Infrastructure.Service
 
             await _unitOFWork.Hotels.AddAsync(hotel);
             await _unitOFWork.SaveChangesAsync();
+            _logger.LogInformation("hotel {HotelId} created successfully", hotel.Id);
 
             return HotelMapping.ToDto(hotel);
 
@@ -43,10 +47,12 @@ namespace HotelBooking.Infrastructure.Service
             var hasActiveRooms = await _unitOFWork.Rooms.HasActiveRoomsAsync(hotel.Id);
             if (hasActiveRooms)
             {
+                _logger.LogWarning("Cannot delete hotel {HotelId} because it has active rooms.", hotel.Id);
                 throw new InvalidOperationException("Cannot delete a hotel with reserved or occupied rooms.");
             }
             _unitOFWork.Hotels.Remove(hotel);
             await _unitOFWork.SaveChangesAsync();
+            _logger.LogInformation("hotel {HotelId} deleted successfully.", hotel.Id);
             return true;
         }
 
@@ -71,7 +77,7 @@ namespace HotelBooking.Infrastructure.Service
             var hotel = await _unitOFWork.Hotels.GetByIdAsync(id);
             if (hotel == null)
             {
-                throw new InvalidOperationException("Hotel not found!");
+                return false;
             }
             hotel.Name = dto.Name;
             hotel.City = dto.City;
@@ -83,6 +89,7 @@ namespace HotelBooking.Infrastructure.Service
             hotel.PhoneNumber = dto.PhoneNumber;
             _unitOFWork.Hotels.Update(hotel);
             await _unitOFWork.SaveChangesAsync();
+            _logger.LogInformation("hotel {HotelId} updated successfully", hotel.Id);
             return true;
         }
         public async Task<IEnumerable<RoomResponseDTO>> GetHotelRoomsAsync(int hotelId)

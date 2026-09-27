@@ -13,5 +13,5 @@ namespace HotelBooking.Domain.Interfaces
         //Task<bool> Register(RegisterDto registerDto);
         Task<LoginResponse> LoginAsync(LoginRequest loginRequest);
         Task<RegisterResponse> RegisterAsync(RegisterRequest registerRequest);
+        Task<bool> ChangePasswordByAdminAsync(int userId, string newPassword);
     }
-}

@@ -98,6 +98,9 @@ builder.Services.AddValidatorsFromAssemblyContaining<HotelSortingValidator>();
 builder.Services.AddValidatorsFromAssemblyContaining<RoomSortingValidator>();
 builder.Services.AddValidatorsFromAssemblyContaining<CustomerSortingValidator>();
 builder.Services.AddValidatorsFromAssemblyContaining<BookingSortingValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<BookingSortingValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<ChangePasswordValidator>();
+
 
 
 

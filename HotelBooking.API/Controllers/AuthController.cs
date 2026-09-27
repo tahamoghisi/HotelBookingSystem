@@ -1,4 +1,5 @@
 ﻿using HotelBooking.Application.DTOs.Auth;
+using HotelBooking.Application.DTOs.User;
 using HotelBooking.Domain.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -10,7 +11,7 @@ namespace HotelBooking.API.Controllers
         private readonly IAuthService _authService;
         public AuthController(IAuthService authService)
         {
-              _authService = authService;
+            _authService = authService;
         }
         [Authorize]
         [HttpGet("test-auth")]
@@ -35,6 +36,17 @@ namespace HotelBooking.API.Controllers
         public IActionResult Test()
         {
             return Ok("API works");
+        }
+        [Authorize(Roles = "Admin")]
+        [HttpPut("{userId}/password")]
+        public async Task<IActionResult> ChangePassword(int userId,AdminChangePasswordDto dto)
+        {
+            var result = await _authService.ChangePasswordByAdminAsync(userId,dto.newPassword);
+
+            if (!result)
+                return NotFound();
+
+            return NoContent();
         }
     }
 }

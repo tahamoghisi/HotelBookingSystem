@@ -6,6 +6,7 @@ using HotelBooking.Application.Mapping.HotelMap;
 using HotelBooking.Application.ServiceInterface;
 using HotelBooking.Domain.Entities;
 using HotelBooking.Domain.Interfaces;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,8 +18,10 @@ namespace HotelBooking.Infrastructure.Service
     public class CustomerService : ICustomerService
     {
         private readonly IUnitOFWork _unitOFWork;
-        public CustomerService(IUnitOFWork unitOFWork)
+        private readonly ILogger<CustomerService> _logger; 
+        public CustomerService(IUnitOFWork unitOFWork, ILogger<CustomerService> logger)
         {
+            _logger = logger;
             _unitOFWork = unitOFWork;
         }
 
@@ -27,10 +30,13 @@ namespace HotelBooking.Infrastructure.Service
             var customer = await _unitOFWork.Customers.GetByIdAsync(id);
             if (customer == null) return false;
             var hasBooking = await _unitOFWork.Bookings.HasCustomerActiveBookingsAsync(customer.Id);
-            if (hasBooking) throw new InvalidOperationException(
-            "Cannot delete a customer with active bookings.");
+            if (hasBooking)
+            {
+                _logger.LogWarning("cannot delete customer {CustomerId} beacause It has booking.", customer.Id);
+            }
             _unitOFWork.Customers.Remove(customer);
             await _unitOFWork.SaveChangesAsync();
+            _logger.LogInformation("Customer {CustomerId} deleted successfully.",customer.Id);
             return true;
         }
 
@@ -75,6 +81,7 @@ namespace HotelBooking.Infrastructure.Service
             if (await _unitOFWork.Customers
                 .ExistsByEmailAsync(dto.Email, id))
             {
+                _logger.LogWarning("Cannot update Customer {CustomerId}: Email already exists.",id);
                 throw new InvalidOperationException(
                     "Email already exists.");
             }
@@ -82,6 +89,7 @@ namespace HotelBooking.Infrastructure.Service
             if (await _unitOFWork.Customers
                 .ExistsByNationalCodeAsync(dto.NationalCode, id))
             {
+                _logger.LogWarning("Cannot update Customer {CustomerId}: national code already exists.",id);
                 throw new InvalidOperationException(
                     "National code already exists.");
             }
@@ -89,6 +97,7 @@ namespace HotelBooking.Infrastructure.Service
             if (await _unitOFWork.Customers
                 .ExistsByPhoneNumberAsync(dto.PhoneNumber, id))
             {
+                _logger.LogWarning("Cannot update Customer {CustomerId}: phone number already exists.",id);
                 throw new InvalidOperationException(
                     "Phone number already exists.");
             }
@@ -98,6 +107,7 @@ namespace HotelBooking.Infrastructure.Service
             customer.NationalCode = dto.NationalCode;
             _unitOFWork.Customers.Update(customer);
             await _unitOFWork.SaveChangesAsync();
+            _logger.LogInformation("Customer {CustomerId} updated successfully.",customer.Id);
             return true;
         }
     }

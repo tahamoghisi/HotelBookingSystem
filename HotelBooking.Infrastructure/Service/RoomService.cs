@@ -5,6 +5,7 @@ using HotelBooking.Application.Mapping.HotelMap;
 using HotelBooking.Application.Mapping.RoomMap;
 using HotelBooking.Application.ServiceInterface;
 using HotelBooking.Domain.Interfaces;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,8 +18,10 @@ namespace HotelBooking.Infrastructure.Service
     public class RoomService : IRoomService
     {
         private readonly IUnitOFWork _unitOFWork;
-        public RoomService(IUnitOFWork unitOFWork)
+        private readonly ILogger<RoomService> _logger;
+        public RoomService(IUnitOFWork unitOFWork, ILogger<RoomService> logger)
         {
+            _logger = logger;
             _unitOFWork = unitOFWork;
         }
         public async Task<RoomResponseDTO> CreateAsync(CreateRoomDTo dto)
@@ -26,7 +29,10 @@ namespace HotelBooking.Infrastructure.Service
             var hotel = await _unitOFWork.Hotels.GetByIdAsync(dto.HotelId);
 
             if (hotel == null)
+            {
+                _logger.LogWarning("hotel {HotelId} not found for roomNumber {roomNumber}", dto.HotelId,dto.RoomNumber);
                 throw new ArgumentException("Hotel Not Found!");
+            }
 
             // ساخت Room
             var room = RoomMapping.ToEntity(dto);
@@ -34,6 +40,7 @@ namespace HotelBooking.Infrastructure.Service
 
             await _unitOFWork.Rooms.AddAsync(room);
             await _unitOFWork.SaveChangesAsync();
+            _logger.LogInformation("Room {RoomId} created successfully.", room.Id);
 
             return RoomMapping.ToDto(room);
         }
@@ -43,21 +50,34 @@ namespace HotelBooking.Infrastructure.Service
             var room = await _unitOFWork.Rooms.GetByIdAsync(id);
             if (room == null) return false;
             if (room.Status == RoomStatus.Occupied)
-                throw new InvalidOperationException(
-                    "Cannot delete an occupied room.");
+            {
+                _logger.LogWarning("cannot delete occupied room {roomId}", room.Id);
+                throw new InvalidOperationException("Cannot delete an occupied room.");
+            }
+                
 
             if (room.Status == RoomStatus.Reserved)
+            {
+                _logger.LogWarning("cannot delete reserved room {roomId}", room.Id);
                 throw new InvalidOperationException(
                     "Cannot delete a reserved room.");
+            }
+                
 
             var hasBookings = await _unitOFWork.Bookings
                 .HasActiveBookingsAsync(id);
 
             if (hasBookings)
+            {
+                _logger.LogWarning("Cannot delete Room {RoomId} because it has active bookings.", room.Id);
                 throw new InvalidOperationException(
                     "Cannot delete a room with active bookings.");
+            }
+                
             _unitOFWork.Rooms.Remove(room);
             await _unitOFWork.SaveChangesAsync();
+            _logger.LogInformation("Room {RoomId} deleted successfully.", room.Id);
+
             return true;
         }
 
@@ -88,7 +108,11 @@ namespace HotelBooking.Infrastructure.Service
             var room = await _unitOFWork.Rooms.GetByIdAsync(id);
             if (room == null) return false;
             var hotel = await _unitOFWork.Hotels.GetByIdAsync(dto.HotelId);
-            if (hotel == null) throw new ArgumentException("Hotel Not Found!");
+            if (hotel == null)
+            {
+                _logger.LogWarning("Hotel {HotelId} not found while updating Room {RoomNumber}.", dto.HotelId, dto.RoomNumber);
+                throw new ArgumentException("Hotel Not Found!");
+            }
             room.HotelId = dto.HotelId;
             room.RoomNumber = dto.RoomNumber;
             room.Type = dto.Type;
@@ -98,6 +122,8 @@ namespace HotelBooking.Infrastructure.Service
             _unitOFWork.Rooms.Update(room);
 
             await _unitOFWork.SaveChangesAsync();
+            _logger.LogInformation("Room {RoomId} updated successfully.", room.Id);
+
 
             return true;
         }
@@ -139,6 +165,7 @@ namespace HotelBooking.Infrastructure.Service
             if (room.Status == RoomStatus.Occupied ||
                 room.Status == RoomStatus.Reserved)
             {
+                _logger.LogWarning("Cannot put Room {RoomId} into maintenance because it is occupied or reserved.", room.Id);
                 throw new InvalidOperationException(
                     "Cannot put a reserved or occupied room into maintenance.");
             }
@@ -147,6 +174,7 @@ namespace HotelBooking.Infrastructure.Service
 
             _unitOFWork.Rooms.Update(room);
             await _unitOFWork.SaveChangesAsync();
+            _logger.LogInformation("Room {RoomId} set to maintenance successfully.", room.Id);
 
             return true;
         }
@@ -158,13 +186,18 @@ namespace HotelBooking.Infrastructure.Service
                 return false;
 
             if (room.Status != RoomStatus.Maintenance)
+            {
+                _logger.LogWarning("Cannot set Room {RoomId} to available because it is not under maintenance.", room.Id);
                 throw new InvalidOperationException(
                     "Room is not under maintenance.");
+            }
+                
 
             room.Status = RoomStatus.Available;
 
             _unitOFWork.Rooms.Update(room);
             await _unitOFWork.SaveChangesAsync();
+            _logger.LogInformation("Room {RoomId} set to available successfully.", room.Id);
 
             return true;
         }

@@ -18,7 +18,13 @@ namespace HotelBooking.API.Middleware
         {
             try
             {
+                _logger.LogInformation("HTTP Request: {Method} {Path}", context.Request.Method, context.Request.Path);
                 await _next(context);
+                _logger.LogInformation(
+                            "HTTP Response: {Method} {Path} - StatusCode: {StatusCode}",
+                            context.Request.Method,
+                            context.Request.Path,
+                            context.Response.StatusCode);
             }
             catch (Exception ex)
             {

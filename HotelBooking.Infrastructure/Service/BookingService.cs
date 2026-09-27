@@ -102,7 +102,10 @@ namespace HotelBooking.Infrastructure.Service
 
             await _unitOFWork.Bookings.AddAsync(booking);
             await _unitOFWork.SaveChangesAsync();
-            _logger.LogInformation("Booking {BookingId} created successfully by User {UserId}.",booking.Id,userId);
+            _logger.LogInformation("Booking {BookingId} created successfully by User {UserId}.", booking.Id,userId);
+            //_logger.LogDebug("This is a Debug log.");
+
+            //_logger.LogInformation("This is an Information log.");
             var response = BookingMapping.ToDto(booking);
             return response;
         }
