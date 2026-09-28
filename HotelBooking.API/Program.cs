@@ -25,8 +25,22 @@ using HotelBooking.Application.Validator.User;
 using HotelBooking.Application.Validator.Booking;
 using HotelBooking.Application.Validator.Pagging;
 using HotelBooking.Application.Validator.Sorting;
+using Serilog;
+;
+
+
+//Log
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .WriteTo.File(
+        "Logs/log-.txt",
+        rollingInterval: RollingInterval.Day)
+    .CreateLogger();
+
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseSerilog();
 
 // Add services to the container.
 builder.Services.AddControllers()
@@ -74,6 +88,8 @@ builder.Services.AddScoped<IHotelService, HotelService>();
 builder.Services.AddScoped<IRoomService, RoomService>();
 builder.Services.AddScoped<IBookingService, BookingService>();
 builder.Services.AddScoped<ICustomerService, CustomerService>();
+builder.Services.AddScoped<IUserService, UserService>();
+
 
 // Unit of Work
 builder.Services.AddScoped<IUnitOFWork, UnitOfWork>();

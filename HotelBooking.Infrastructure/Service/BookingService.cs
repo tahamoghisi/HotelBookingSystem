@@ -37,6 +37,7 @@ namespace HotelBooking.Infrastructure.Service
             if (booking.Status != BookingStatus.Pending &&
                 booking.Status != BookingStatus.Confirmed)
             {
+                _logger.LogWarning("Cannot cancel Booking {BookingId} because it is neither pending nor confirmed.", booking.Id);
                 throw new InvalidOperationException(
                     "Only pending or confirmed bookings can be cancelled.");
             }
@@ -45,7 +46,10 @@ namespace HotelBooking.Infrastructure.Service
                 var room = await _unitOFWork.Rooms.GetByIdAsync(booking.RoomId);
 
                 if (room == null)
+                {
+                    _logger.LogWarning("Room {RoomId} not found for booking {BookingId}", booking.RoomId, booking.Id);
                     throw new ArgumentException("Room Not Found!");
+                }
 
                 room.Status = RoomStatus.Available;
 
@@ -56,6 +60,7 @@ namespace HotelBooking.Infrastructure.Service
             _unitOFWork.Bookings.Update(booking);
 
             await _unitOFWork.SaveChangesAsync();
+            _logger.LogInformation("Booking {BookingId} canceled successfully.", booking.Id);
 
             return true;
         }
@@ -169,23 +174,35 @@ namespace HotelBooking.Infrastructure.Service
                 return false;
 
             if (dto.CheckInDate >= dto.CheckOutDate)
+            {
+                _logger.LogWarning("Cannot update Booking {BookingId} because Check-out date isnt after check-in date.", booking.Id);
                 throw new ArgumentException(
                     "Check-out date must be after check-in date.");
-
+            }
+               
             var customer = await _unitOFWork.Customers.GetByIdAsync(dto.CustomerId);
 
             if (customer == null)
+            {
+                _logger.LogWarning("Customer {CustomerId} not found for booking {BookingId}", dto.CustomerId, booking.Id);
                 throw new ArgumentException("Customer not found.");
+            }
 
             var hotel = await _unitOFWork.Hotels.GetByIdAsync(dto.HotelId);
 
             if (hotel == null)
+            {
+                _logger.LogWarning("Hotel {HotelId} not found for booking {BookingId}", dto.HotelId, booking.Id);
                 throw new ArgumentException("Hotel not found.");
+            }
 
             var room = await _unitOFWork.Rooms.GetByIdAsync(dto.RoomId);
 
             if (room == null)
+            {
+                _logger.LogWarning("Room {RoomId} not found for booking {BookingId}", dto.RoomId, booking.Id);
                 throw new ArgumentException("Room not found.");
+            }
 
             var available = await _unitOFWork.Bookings.IsRoomAvailableAsync(
                 dto.RoomId,
@@ -194,8 +211,11 @@ namespace HotelBooking.Infrastructure.Service
                 booking.Id);
 
             if (!available)
+            {
+                _logger.LogWarning("Room {RoomId} is not available for booking {BookingId}", booking.RoomId, booking.Id);
                 throw new InvalidOperationException(
                     "Room is not available for the selected dates.");
+            }
 
             var nights = (dto.CheckOutDate - dto.CheckInDate).Days;
             booking.CheckOutDate = dto.CheckOutDate;
@@ -206,6 +226,7 @@ namespace HotelBooking.Infrastructure.Service
             booking.TotalPrice = room.PricePerNight * nights;
             _unitOFWork.Bookings.Update(booking);
             await _unitOFWork.SaveChangesAsync();
+            _logger.LogInformation("booking {BookingId} updated successfully.", booking.Id);
             return true;
         }
         public async Task<bool> ConfirmAsync(int bookingId)
@@ -216,13 +237,19 @@ namespace HotelBooking.Infrastructure.Service
                 return false;
 
             if (booking.Status != BookingStatus.Pending)
+            {
+                _logger.LogWarning("Cannot confirm Booking {BookingId} because it is not pending.", bookingId);
                 throw new InvalidOperationException(
                     "Only pending bookings can be confirmed.");
-
+            }
+                
             var room = await _unitOFWork.Rooms.GetByIdAsync(booking.RoomId);
 
             if (room == null)
+            {
+                _logger.LogWarning("Room {RoomId} not found for booking {BookingId}", booking.RoomId, booking.Id);
                 throw new ArgumentException("Room Not Found!");
+            }
 
             var available = await _unitOFWork.Bookings.IsRoomAvailableAsync(
                 booking.RoomId,
@@ -231,8 +258,12 @@ namespace HotelBooking.Infrastructure.Service
                 booking.Id);
 
             if (!available)
+            {
+                _logger.LogWarning("Room {RoomId} is no longer available for the selected dates for booking {BookingId}", booking.RoomId, booking.Id);
                 throw new InvalidOperationException(
                     "Room is no longer available for the selected dates.");
+            }
+            
 
             booking.Status = BookingStatus.Confirmed;
 
@@ -242,6 +273,7 @@ namespace HotelBooking.Infrastructure.Service
             _unitOFWork.Rooms.Update(room);
 
             await _unitOFWork.SaveChangesAsync();
+            _logger.LogInformation("booking {BookingId} confirmed successfully.", booking.Id);
 
             return true;
         }
@@ -253,13 +285,20 @@ namespace HotelBooking.Infrastructure.Service
                 return false;
 
             if (booking.Status != BookingStatus.Confirmed)
+            {
+                _logger.LogWarning("Cannot check in Booking {BookingId} because it is not confirmed.", booking.Id);
                 throw new InvalidOperationException(
                     "Only confirmed bookings can be checked in.");
+            }
+            
 
             var room = await _unitOFWork.Rooms.GetByIdAsync(booking.RoomId);
 
             if (room == null)
+            {
+                _logger.LogWarning("Room {RoomId} not found for booking {BookingId}", booking.RoomId, booking.Id);
                 throw new ArgumentException("Room Not Found!");
+            }
 
             booking.Status = BookingStatus.CheckedIn;
             room.Status = RoomStatus.Occupied;
@@ -268,6 +307,8 @@ namespace HotelBooking.Infrastructure.Service
             _unitOFWork.Rooms.Update(room);
 
             await _unitOFWork.SaveChangesAsync();
+            _logger.LogInformation("booking {BookingId} checked in successfully.", booking.Id);
+
 
             return true;
         }
@@ -279,13 +320,19 @@ namespace HotelBooking.Infrastructure.Service
                 return false;
 
             if (booking.Status != BookingStatus.CheckedIn)
+            {
+                _logger.LogWarning("Cannot check out Booking {BookingId} because it is not checked in.", booking.Id);
                 throw new InvalidOperationException(
                     "Only checked-in bookings can be checked out.");
+            }
 
             var room = await _unitOFWork.Rooms.GetByIdAsync(booking.RoomId);
 
             if (room == null)
+            {
+                _logger.LogWarning("Room {RoomId} not found for booking {BookingId}", booking.RoomId, booking.Id);
                 throw new ArgumentException("Room Not Found!");
+            }
 
             booking.Status = BookingStatus.Completed;
             room.Status = RoomStatus.Available;
@@ -294,6 +341,7 @@ namespace HotelBooking.Infrastructure.Service
             _unitOFWork.Rooms.Update(room);
 
             await _unitOFWork.SaveChangesAsync();
+            _logger.LogInformation("booking {BookingId} checked out successfully.",booking.Id);
 
             return true;
         }

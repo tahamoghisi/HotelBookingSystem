@@ -19,5 +19,15 @@ namespace HotelBooking.Application.Mapping.UserMap
             };
             return user;
         }
+        public static UserResponseDto ToDto(User user)
+        {
+            var dto = new UserResponseDto
+            {
+                Id = user.Id,
+                UserName = user.UserName,
+                Role = user.Role,
+            };
+            return dto;
+        }
     }
 }

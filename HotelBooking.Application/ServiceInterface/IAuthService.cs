@@ -15,3 +15,4 @@ namespace HotelBooking.Domain.Interfaces
         Task<RegisterResponse> RegisterAsync(RegisterRequest registerRequest);
         Task<bool> ChangePasswordByAdminAsync(int userId, string newPassword);
     }
+}
