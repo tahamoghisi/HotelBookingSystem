@@ -23,7 +23,7 @@ namespace HotelBooking.API.Controllers
         [HttpGet("my-bookings")]
         public async Task<IActionResult> GetMyBookings()
         {
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
             var bookings = await _bookingService.GetByUserIdAsync(userId);
             if (bookings == null)
                 return NotFound("Customer not found.");
