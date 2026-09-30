@@ -11,6 +11,6 @@ namespace HotelBooking.Domain.Entities.Images
         public string ImageUrl {  get; set; } = string.Empty;
         public int HotelId { get; set; }
         public bool IsMain { get; set; }
-        public Hotel Hotel { get; set; }
+        public Hotel Hotel { get; set; } = null!;
     }
 }

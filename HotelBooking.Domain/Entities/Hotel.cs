@@ -25,6 +25,6 @@ namespace HotelBooking.Domain.Entities
         // Navigation Properties
         public ICollection<Room> Rooms { get; set; } = new List<Room>();
         public ICollection<Booking> Booking { get; set; } = new List<Booking>();
-        public List<HotelImage> Images { get; set; } = new();
+        public ICollection<HotelImage> Images { get; set; } = new List<HotelImage>();
     }
 }

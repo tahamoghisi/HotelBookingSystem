@@ -16,8 +16,7 @@ namespace HotelBooking.Domain.Entities
         public decimal PricePerNight { get; set; }
         public int Capacity { get; set; } //ظرفیت
         public ICollection<Booking> Bookings { get; set; } = new List<Booking>();
-        public List<RoomImage> Images { get; set; } = new();
-        public Hotel Hotel { get; set; }
+        public ICollection<RoomImage> Images { get; set; } = new List<RoomImage>(); public Hotel Hotel { get; set; }
         public RoomStatus Status { get; set; }
 
 
