@@ -1,4 +1,5 @@
 ﻿using HotelBooking.Domain.Entities;
+using HotelBooking.Domain.Entities.Images;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -158,6 +159,26 @@ namespace HotelBooking.Infrastructure
                 entity.Property(h => h.Description)
                     .HasMaxLength(1000);
             });
+
+
+
+
+
+
+            modelBuilder.Entity<HotelImage>()
+           .HasOne(x => x.Hotel)
+           .WithMany(x => x.Images)
+           .HasForeignKey(x => x.HotelId)
+           .OnDelete(DeleteBehavior.Cascade);
+
+
+
+
+            modelBuilder.Entity<RoomImage>()
+           .HasOne(x => x.Room)
+           .WithMany(x => x.Images)
+           .HasForeignKey(x => x.RoomId)
+           .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

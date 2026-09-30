@@ -1,4 +1,5 @@
-﻿using System;
+﻿using HotelBooking.Domain.Entities.Images;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -24,5 +25,6 @@ namespace HotelBooking.Domain.Entities
         // Navigation Properties
         public ICollection<Room> Rooms { get; set; } = new List<Room>();
         public ICollection<Booking> Booking { get; set; } = new List<Booking>();
+        public List<HotelImage> Images { get; set; } = new();
     }
 }
