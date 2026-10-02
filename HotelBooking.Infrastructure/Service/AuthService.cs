@@ -48,14 +48,14 @@ namespace HotelBooking.Infrastructure.Service
             if (user == null)
             {
                 _logger.LogWarning("username {UserName} or password is incorrect.", loginRequest.userName);
-                throw new Exception("UserName or Password is incorrect");
+                throw new UnauthorizedAccessException("UserName or Password is incorrect");
             }
                
             var isPasswordValid = _passwordHasher.Verify(loginRequest.password, user.Password);
             if (!isPasswordValid)
             {
                 _logger.LogWarning("username {UserName} or password is incorrect.", loginRequest.userName);
-                throw new Exception("UserName or Password is incorrect");
+                throw new UnauthorizedAccessException("UserName or Password is incorrect");
             }
             _logger.LogInformation("User {UserId} logined successfully.", user.Id);
             var token = _jwtService.GenerateToken(user);

@@ -40,13 +40,11 @@ namespace HotelBooking.API.Middleware
         private static async Task HandleExceptionAsync(HttpContext context,Exception exception)
         {
             context.Response.ContentType = "application/json";
-
             context.Response.StatusCode = exception switch
             {
                 ArgumentException => StatusCodes.Status400BadRequest,
-
+                UnauthorizedAccessException => StatusCodes.Status401Unauthorized,
                 InvalidOperationException => StatusCodes.Status409Conflict,
-
                 _ => StatusCodes.Status500InternalServerError
             };
 
