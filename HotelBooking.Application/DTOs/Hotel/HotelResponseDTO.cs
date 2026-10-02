@@ -1,4 +1,5 @@
-﻿using System;
+﻿using HotelBooking.Application.DTOs.Image;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -17,5 +18,6 @@ namespace HotelBooking.Application.DTOs.Hotel
         public string? Email { get; set; }
         public int StarRating { get; set; }
         public string? Description { get; set; }
+        public List<HotelImageResponseDTO> Images { get; set; } = new();
     }
 }

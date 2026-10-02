@@ -1,13 +1,17 @@
 ﻿using HotelBooking.Application.Common.Models;
 using HotelBooking.Application.DTOs.Customer;
 using HotelBooking.Application.DTOs.Hotel;
+using HotelBooking.Application.DTOs.Image;
 using HotelBooking.Application.DTOs.Room;
 using HotelBooking.Application.Mapping.CustomerMap;
 using HotelBooking.Application.Mapping.HotelMap;
 using HotelBooking.Application.Mapping.RoomMap;
 using HotelBooking.Application.ServiceInterface;
 using HotelBooking.Domain.Entities;
+using HotelBooking.Domain.Entities.Images;
 using HotelBooking.Domain.Interfaces;
+using HotelBooking.Infrastructure.Repository;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -58,13 +62,13 @@ namespace HotelBooking.Infrastructure.Service
 
         public async Task<IEnumerable<HotelResponseDTO>> GetAllAsync()
         {
-            var hotels = await _unitOFWork.Hotels.GetAllAsync();
+            var hotels = await _unitOFWork.Hotels.GetAllHotelsAsync();
             return hotels.Select(x => HotelMapping.ToDto(x)).ToList();
         }
 
         public async Task<HotelResponseDTO?> GetByIdAsync(int id)
         {
-            var hotel = await _unitOFWork.Hotels.GetByIdAsync(id);
+            var hotel = await _unitOFWork.Hotels.GetByHotelIdAsync(id);
             if (hotel == null)
             {
                 return null;
@@ -94,7 +98,7 @@ namespace HotelBooking.Infrastructure.Service
         }
         public async Task<IEnumerable<RoomResponseDTO>> GetHotelRoomsAsync(int hotelId)
         {
-            var hotel = await _unitOFWork.Hotels.GetByIdAsync(hotelId);
+            var hotel = await _unitOFWork.Hotels.GetByHotelIdAsync(hotelId);
             if (hotel == null)
             {
                 throw new InvalidOperationException("Hotel not found!");
@@ -128,6 +132,65 @@ namespace HotelBooking.Infrastructure.Service
                 PageSize = pagination.PageSize,
                 TotalCount = pageItems.TotalCount
             };
+        }
+
+        public async Task<List<HotelImageResponseDTO>> AddHotelImagesAsync(int hotelId, List<IFormFile> images)
+        {
+            var hotel = await _unitOFWork.Hotels.GetByHotelIdAsync(hotelId);
+
+            if (hotel == null)
+                throw new KeyNotFoundException("Hotel not found.");
+
+            if (images == null || images.Count == 0)
+                throw new ArgumentException("At least one image is required.");
+
+            var hotelImages = new List<HotelImage>();
+            var hasMainImage = await _unitOFWork.HotelImage.HasMainImageAsync(hotelId);
+
+            foreach (var image in images)
+            {
+                if (image.Length == 0)
+                    continue;
+
+                var fileName = Guid.NewGuid() + Path.GetExtension(image.FileName);
+
+                var folderPath = Path.Combine(
+                    Directory.GetCurrentDirectory(),
+                    "wwwroot",
+                    "images",
+                    "hotels",
+                    hotelId.ToString());
+
+                Directory.CreateDirectory(folderPath);
+
+                var filePath = Path.Combine(folderPath, fileName);
+
+                using var stream = new FileStream(
+                    filePath,
+                    FileMode.Create);
+
+                await image.CopyToAsync(stream);
+
+                var hotelImage = new HotelImage
+                {
+                    HotelId = hotelId,
+                    ImageUrl = $"/images/hotels/{hotelId}/{fileName}",
+                    IsMain = !hasMainImage && hotelImages.Count == 0
+                };
+
+                hotelImages.Add(hotelImage);
+            }
+
+            await _unitOFWork.HotelImage.AddRangeAsync(hotelImages);
+
+            await _unitOFWork.SaveChangesAsync();
+
+            return hotelImages.Select(x => new HotelImageResponseDTO
+            {
+                Id = x.Id,
+                ImageUrl = x.ImageUrl,
+                IsMain = x.IsMain
+            }).ToList();
         }
     }
 }

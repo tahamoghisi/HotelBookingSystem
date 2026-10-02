@@ -1,5 +1,6 @@
 ﻿using HotelBooking.Application.Common.Models;
 using HotelBooking.Application.DTOs.Hotel;
+using HotelBooking.Application.DTOs.Image;
 using HotelBooking.Application.ServiceInterface;
 using HotelBooking.Infrastructure.Service;
 using Microsoft.AspNetCore.Authorization;
@@ -95,6 +96,14 @@ namespace HotelBooking.API.Controllers
                 return NotFound();
 
             return NoContent();
+        }[HttpPost("{hotelId}/images")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> AddHotelImages(int hotelId, [FromForm] List<IFormFile> images)
+        {
+            var result = await _hotelService.AddHotelImagesAsync(hotelId,images);
+
+            return Ok(ApiResponse<List<HotelImageResponseDTO>>.Ok(result));
         }
+        
     }
 }

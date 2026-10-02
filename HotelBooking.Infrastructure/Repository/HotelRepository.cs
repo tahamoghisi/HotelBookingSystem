@@ -1,4 +1,5 @@
 ﻿using HotelBooking.Domain.Entities;
+using HotelBooking.Domain.Entities.Images;
 using HotelBooking.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -25,33 +26,44 @@ namespace HotelBooking.Infrastructure.Repository
 
         public async Task<IEnumerable<Hotel>> GetActiveHotelsAsync()
         {
-            return await _dbContext.Hotels
+            return await _dbContext.Hotels.Include(h => h.Images)
                 .Where(h => h.IsActive == true)
                 .ToListAsync();
         }
 
+        public async Task<List<Hotel>> GetAllHotelsAsync()
+        {
+            return await _dbContext.Hotels.Include(h => h.Images)
+                            .ToListAsync();
+        }
+
         public async Task<IEnumerable<Hotel>> GetByCityAsync(string city)
         {
-            return await _dbContext.Hotels
+            return await _dbContext.Hotels.Include(h => h.Images)
                 .Where(h => h.City == city)
                 .ToListAsync();
         }
 
+        public async Task<Hotel?> GetByHotelIdAsync(int hotelId)
+        {
+            return await _dbContext.Hotels.Include(h => h.Images).FirstOrDefaultAsync(h => h.Id == hotelId);
+        }
+
         public async Task<Hotel?> GetByNameAsync(string name)
         {
-            return await _dbContext.Hotels
+            return await _dbContext.Hotels.Include(h => h.Images)
                 .FirstOrDefaultAsync(h => h.Name == name);
         }
 
         public async Task<IEnumerable<Hotel>> GetByStarRatingAsync(int starRating)
         {
-            return await _dbContext.Hotels
+            return await _dbContext.Hotels.Include(h => h.Images)
                 .Where(h => h.StarRating == starRating).ToListAsync();
         }
 
         public async Task<IEnumerable<Hotel>> GetHotelsWithAvailableRoomsAsync(DateTime checkIn, DateTime checkOut)
         {
-            return await _dbContext.Hotels
+            return await _dbContext.Hotels.Include(h => h.Images)
                     .Where(h => h.Rooms.Any(r =>
                         !r.Bookings.Any(b =>
                             checkIn < b.CheckOutDate &&
@@ -63,14 +75,14 @@ namespace HotelBooking.Infrastructure.Repository
 
         public async Task<Hotel?> GetHotelWithRoomsAsync(int hotelId)
         {
-            return await _dbContext.Hotels
+            return await _dbContext.Hotels.Include(h => h.Images)
                 .Include(r => r.Rooms)
                 .FirstOrDefaultAsync(h => h.Id == hotelId);
         }
 
         public async Task<IEnumerable<Hotel>> SearchHotelsAsync(string? city, int? minStarRating, int? maxStarRating)
         {
-            var query = _dbContext.Hotels.Where(h => h.IsActive == true);
+            var query = _dbContext.Hotels.Include(h => h.Images).Where(h => h.IsActive == true);
 
             if (!string.IsNullOrWhiteSpace(city))
             {
@@ -95,7 +107,7 @@ namespace HotelBooking.Infrastructure.Repository
 
         public async Task<IEnumerable<Hotel>> SearchHotelsAsync(string? name, string? city, int? minStars)
         {
-            var query = _dbContext.Hotels.Where(h => h.IsActive == true);
+            var query = _dbContext.Hotels.Include(h => h.Images).Where(h => h.IsActive == true);
             if (!string.IsNullOrWhiteSpace(city))
             {
                 query = query.Where(h => h.City.Contains(city));
@@ -115,7 +127,7 @@ namespace HotelBooking.Infrastructure.Repository
         //صفخه بندی و تعداد کل و مرتب سازی
         public async Task<(IEnumerable<Hotel> Items, int TotalCount)> SearchPagedAsync(string? name, string? city, int? minStarRating, int page, int pageSize, string? sortBy, bool descending)
         {
-            var query = _dbContext.Hotels.AsQueryable();
+            var query = _dbContext.Hotels.Include(h => h.Images).AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(name))
                 query = query.Where(h => h.Name.Contains(name));

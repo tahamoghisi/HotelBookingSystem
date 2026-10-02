@@ -1,4 +1,5 @@
 ﻿using HotelBooking.Domain.Entities;
+using HotelBooking.Domain.Entities.Images;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +10,8 @@ namespace HotelBooking.Domain.Interfaces
 {
     public interface IHotelRepository : IGenericRepositoy<Hotel>
     {
+        Task<List<Hotel>> GetAllHotelsAsync();
+        Task<Hotel?> GetByHotelIdAsync(int  hotelId);
         Task<Hotel?> GetByNameAsync(string name);
         Task<IEnumerable<Hotel>> GetByCityAsync(string city);
         Task<IEnumerable<Hotel>> GetByStarRatingAsync(int starRating);
@@ -19,7 +22,6 @@ namespace HotelBooking.Domain.Interfaces
         Task<bool> ExistsByNameAsync(string name);
         Task<IEnumerable<Hotel>> GetHotelsWithAvailableRoomsAsync(DateTime checkIn,DateTime checkOut);
         Task<(IEnumerable<Hotel> Items, int TotalCount)> SearchPagedAsync(string? name, string? city, int? minStarRating, int page, int pageSize, string? sortBy, bool descending);//صفخه بندی و تعداد کل و مرتب سازی
-
     }
 }
 

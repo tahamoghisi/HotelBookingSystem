@@ -17,7 +17,8 @@ namespace HotelBooking.Infrastructure.Repository
         IRoomRepository rooms,
         ICustomerRepository customers,
         IBookingRepository bookings,
-        IUserRepository users
+        IUserRepository users,
+        IHotelImageRepository hotelImageRepository
             )
         {
             _dbContext = context;
@@ -26,6 +27,8 @@ namespace HotelBooking.Infrastructure.Repository
             Customers = customers;
             Bookings = bookings;
             User = users;
+            HotelImage = hotelImageRepository;
+
         }
         public IHotelRepository Hotels { get; }
 
@@ -36,6 +39,7 @@ namespace HotelBooking.Infrastructure.Repository
         public IBookingRepository Bookings { get; }
 
         public IUserRepository User { get; }
+        public IHotelImageRepository HotelImage { get; }
 
         public void Dispose()
         {

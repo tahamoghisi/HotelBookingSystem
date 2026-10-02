@@ -1,12 +1,14 @@
 ﻿using HotelBooking.Application.Common.Models;
 using HotelBooking.Application.DTOs.Customer;
 using HotelBooking.Application.DTOs.Hotel;
+using HotelBooking.Application.DTOs.Image;
 using HotelBooking.Application.DTOs.Room;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 
 namespace HotelBooking.Application.ServiceInterface
 {
@@ -24,6 +26,7 @@ namespace HotelBooking.Application.ServiceInterface
         Task<IEnumerable<RoomResponseDTO>> GetHotelRoomsAsync(int hotelId);
         Task<PagedResult<HotelResponseDTO>> GetPagedAsync(int page, int pageSize);
         Task<PagedResult<HotelResponseDTO>> SearchPagedAsync(string? name, string? city, int? minStarRating, PaginationRequest pagination, SortingRequest sorting);//صفخه بندی و تعداد کل و مرتب سازی
+        Task<List<HotelImageResponseDTO>> AddHotelImagesAsync(int hotelId,List<IFormFile> images);
 
     }
 }
