@@ -11,5 +11,8 @@ namespace HotelBooking.Domain.Interfaces
     {
         Task AddRangeAsync(IEnumerable<HotelImage> images);
         Task<bool> HasMainImageAsync(int hotelId);
+        Task<bool> DeleteAsync(int imageId);
+        Task<HotelImage?> GetByIdAsync(int hotelId,int imageId);
+        Task<bool> SetMainImageAsync(int hotelId, int imageId);
     }
 }

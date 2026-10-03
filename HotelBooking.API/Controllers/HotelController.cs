@@ -105,6 +105,29 @@ namespace HotelBooking.API.Controllers
 
             return Ok(ApiResponse<List<HotelImageResponseDTO>>.Ok(result));
         }
-        
+        [HttpDelete("{hotelId}/images/{imageId}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> DeleteHotelImage(int hotelId, int imageId)
+        {
+            var result = await _hotelService.DeleteHotelImageAsync(hotelId, imageId);
+
+            if (!result)
+                return NotFound(ApiResponse<string>.Fail("Hotel image not found."));
+
+            return Ok(ApiResponse<string>.Ok(
+                "Hotel image deleted successfully."));
+        }
+        [HttpPut("{hotelId}/images/{imageId}/main")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> SetMainHotelImage(int hotelId, int imageId)
+        {
+            var result = await _hotelService.SetMainHotelImageAsync(hotelId, imageId);
+
+            if (!result)
+                return NotFound(ApiResponse<string>.Fail("Hotel image not found."));
+
+            return Ok(ApiResponse<string>.Ok(
+                "Hotel image set as main successfully."));
+        }
     }
 }

@@ -110,7 +110,7 @@ namespace HotelBooking.Infrastructure.Service
         public async Task<PagedResult<HotelResponseDTO>> GetPagedAsync(int page, int pageSize)
         {
             var totalCount = await _unitOFWork.Hotels.GetCountAsync();
-            var pageItems = await _unitOFWork.Hotels.GetPagedAsync(page , pageSize);
+            var pageItems = await _unitOFWork.Hotels.GetPagedAsync(page, pageSize);
             var dto = pageItems.Select(x => HotelMapping.ToDto(x)).ToList();
             return new PagedResult<HotelResponseDTO>
             {
@@ -123,7 +123,7 @@ namespace HotelBooking.Infrastructure.Service
         //صفخه بندی و تعداد کل و مرتب سازی
         public async Task<PagedResult<HotelResponseDTO>> SearchPagedAsync(string? name, string? city, int? minStarRating, PaginationRequest pagination, SortingRequest sorting)
         {
-            var pageItems = await _unitOFWork.Hotels.SearchPagedAsync(name, city, minStarRating,pagination.Page, pagination.PageSize, sorting.SortBy, sorting.Descending);
+            var pageItems = await _unitOFWork.Hotels.SearchPagedAsync(name, city, minStarRating, pagination.Page, pagination.PageSize, sorting.SortBy, sorting.Descending);
             var dto = pageItems.Items.Select(x => HotelMapping.ToDto(x)).ToList();
             return new PagedResult<HotelResponseDTO>
             {
@@ -191,6 +191,32 @@ namespace HotelBooking.Infrastructure.Service
                 ImageUrl = x.ImageUrl,
                 IsMain = x.IsMain
             }).ToList();
+        }
+
+        public async Task<bool> DeleteHotelImageAsync(int hotelId, int imageId)
+        {
+            var image = await _unitOFWork.HotelImage.GetByIdAsync(hotelId, imageId);
+            if (image == null) return false;
+            var filePath = Path.Combine(
+            Directory.GetCurrentDirectory(),
+            "wwwroot",
+            image.ImageUrl.TrimStart('/').Replace("/", Path.DirectorySeparatorChar.ToString()));
+            
+            if (File.Exists(filePath))
+            {
+                File.Delete(filePath);
+            }
+            await _unitOFWork.HotelImage.DeleteAsync(imageId);
+            await _unitOFWork.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> SetMainHotelImageAsync(int hotelId, int imageId)
+        {
+            var result = await _unitOFWork.HotelImage.SetMainImageAsync(hotelId, imageId);
+            if (result == false) return false;
+            await _unitOFWork.SaveChangesAsync();
+            return true;
         }
     }
 }

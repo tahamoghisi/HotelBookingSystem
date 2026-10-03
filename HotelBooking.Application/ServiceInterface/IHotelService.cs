@@ -27,6 +27,8 @@ namespace HotelBooking.Application.ServiceInterface
         Task<PagedResult<HotelResponseDTO>> GetPagedAsync(int page, int pageSize);
         Task<PagedResult<HotelResponseDTO>> SearchPagedAsync(string? name, string? city, int? minStarRating, PaginationRequest pagination, SortingRequest sorting);//صفخه بندی و تعداد کل و مرتب سازی
         Task<List<HotelImageResponseDTO>> AddHotelImagesAsync(int hotelId,List<IFormFile> images);
+        Task<bool> DeleteHotelImageAsync(int hotelId, int imageId);
+        Task<bool> SetMainHotelImageAsync(int hotelId, int imageId);
 
     }
 }
