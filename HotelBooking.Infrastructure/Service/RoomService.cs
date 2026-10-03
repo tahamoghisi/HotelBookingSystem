@@ -1,10 +1,14 @@
 ﻿using HotelBooking.Application.Common.Models;
 using HotelBooking.Application.DTOs.Hotel;
+using HotelBooking.Application.DTOs.Image;
 using HotelBooking.Application.DTOs.Room;
 using HotelBooking.Application.Mapping.HotelMap;
 using HotelBooking.Application.Mapping.RoomMap;
 using HotelBooking.Application.ServiceInterface;
+using HotelBooking.Domain.Entities;
+using HotelBooking.Domain.Entities.Images;
 using HotelBooking.Domain.Interfaces;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -83,7 +87,7 @@ namespace HotelBooking.Infrastructure.Service
 
         public async Task<IEnumerable<RoomResponseDTO>> GetAllAsync()
         {
-            var rooms = await _unitOFWork.Rooms.GetAllAsync();
+            var rooms = await _unitOFWork.Rooms.GetAllRoomsAsync();
             return rooms.Select(x => RoomMapping.ToDto(x)).ToList();
         }
 
@@ -95,7 +99,7 @@ namespace HotelBooking.Infrastructure.Service
 
         public async Task<RoomResponseDTO?> GetByIdAsync(int id)
         {
-            var room = await _unitOFWork.Rooms.GetByIdAsync(id);
+            var room = await _unitOFWork.Rooms.GetByRoomIdAsync(id);
 
             if (room == null)
                 return null;
@@ -153,6 +157,63 @@ namespace HotelBooking.Infrastructure.Service
                 TotalCount = pageItems.TotalCount
             };
 
+        }
+        public async Task<List<RoomImageResponseDTO>> AddRoomImagesAsync(int roomId, List<IFormFile> images)
+        {
+            var room = await _unitOFWork.Rooms.GetByRoomIdAsync(roomId);
+            if (room == null)
+                throw new KeyNotFoundException("Hotel not found.");
+
+            if (images == null || images.Count == 0)
+                throw new ArgumentException("At least one image is required.");
+
+            var roomImages = new List<RoomImage>();
+            var hasMainImage = await _unitOFWork.RoomImage.HasMainImageAsync(roomId);
+
+            foreach (var image in images)
+            {
+                if (image.Length == 0)
+                    continue;
+
+                var fileName = Guid.NewGuid() + Path.GetExtension(image.FileName);
+
+                var folderPath = Path.Combine(
+                    Directory.GetCurrentDirectory(),
+                    "wwwroot",
+                    "images",
+                    "rooms",
+                    roomId.ToString());
+
+                Directory.CreateDirectory(folderPath);
+
+                var filePath = Path.Combine(folderPath, fileName);
+
+                using var stream = new FileStream(
+                    filePath,
+                    FileMode.Create);
+
+                await image.CopyToAsync(stream);
+
+                var roomImage = new RoomImage
+                {
+                    RoomId = roomId,
+                    ImageUrl = $"/images/rooms/{roomId}/{fileName}",
+                    IsMain = !hasMainImage && roomImages.Count == 0
+                };
+
+                roomImages.Add(roomImage);
+            }
+
+            await _unitOFWork.RoomImage.AddRangeAsync(roomImages);
+
+            await _unitOFWork.SaveChangesAsync();
+
+            return roomImages.Select(x => new RoomImageResponseDTO
+            {
+                Id = x.Id,
+                ImageUrl = x.ImageUrl,
+                IsMain = x.IsMain
+            }).ToList();
         }
         #region MaintenanceStatus
         public async Task<bool> SetMaintenanceAsync(int roomId)

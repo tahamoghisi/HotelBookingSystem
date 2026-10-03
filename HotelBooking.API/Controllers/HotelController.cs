@@ -96,7 +96,8 @@ namespace HotelBooking.API.Controllers
                 return NotFound();
 
             return NoContent();
-        }[HttpPost("{hotelId}/images")]
+        }
+        [HttpPost("{hotelId}/images")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> AddHotelImages(int hotelId, [FromForm] List<IFormFile> images)
         {

@@ -1,10 +1,10 @@
-﻿using System;
+﻿using HotelBooking.Application.DTOs.Image;
+using HotelBooking.Domain;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using HotelBooking.Domain;
-
 using static HotelBooking.Domain.Entities.Room;
 namespace HotelBooking.Application.DTOs.Room
 {
@@ -18,6 +18,7 @@ namespace HotelBooking.Application.DTOs.Room
         public int HotelId { get; set; }
         public string HotelName { get; set; } = string.Empty; // برای نمایش
         public RoomStatus Status { get; set; }
+        public List<RoomImageResponseDTO> Images { get; set; } = new();
 
     }
 }

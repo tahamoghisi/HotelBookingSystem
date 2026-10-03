@@ -1,4 +1,5 @@
-﻿using HotelBooking.Application.DTOs.Room;
+﻿using HotelBooking.Application.DTOs.Image;
+using HotelBooking.Application.DTOs.Room;
 using HotelBooking.Domain.Entities;
 using System;
 using System.Collections.Generic;
@@ -22,6 +23,12 @@ namespace HotelBooking.Application.Mapping.RoomMap
                 RoomType = room.Type,
                 HotelName = room.Hotel?.Name ?? "نامشخص",
                 Status = room.Status,
+                Images = room.Images.Select(image => new RoomImageResponseDTO
+                {
+                    Id = image.Id,
+                    ImageUrl = image.ImageUrl,
+                    IsMain = image.IsMain
+                }).ToList()
             };
         }
         public static Room ToEntity(CreateRoomDTo RoomDto)

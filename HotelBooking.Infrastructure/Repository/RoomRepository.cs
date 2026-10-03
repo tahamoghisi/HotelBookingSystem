@@ -20,32 +20,33 @@ namespace HotelBooking.Infrastructure.Repository
         }
         public async Task<IEnumerable<Room>> GetAviablelRooms()
         {
-            return await _dbContext.Rooms
+            return await _dbContext.Rooms.Include(r => r.Images)
                 .Where(r => r.Status == Room.RoomStatus.Available)
                 .ToListAsync();
         }
 
         public async Task<IEnumerable<Room>> GetByHotelIdAsync(int hotelId)
         {
-            var rooms = await _dbContext.Rooms.Where(r => r.HotelId == hotelId).ToListAsync();
+            var rooms = await _dbContext.Rooms.Include(r => r.Images).Where(r => r.HotelId == hotelId).ToListAsync();
             return rooms;
         }
 
         public async Task<Room?> GetByRoomNumberAsync(int roomNumber)
         {
-            return await _dbContext.Rooms
+            return await _dbContext.Rooms.Include(r => r.Images)
                 .FirstOrDefaultAsync(r => r.RoomNumber == roomNumber);
         }
 
         public async Task<IEnumerable<Room>> GetRoomsByHotelId(int hotelId)
         {
-            return await _dbContext.Rooms.Where(x => x.HotelId == hotelId).ToListAsync();
+            return await _dbContext.Rooms.Include(r => r.Images).Where(x => x.HotelId == hotelId).ToListAsync();
         }
 
         public async Task<Room?> GetRoomWithBookingsAsync(int roomId)
         {
             return await _dbContext.Rooms
             .Include(r => r.Bookings)
+            .Include(r => r.Images)
             .FirstOrDefaultAsync(r => r.Id == roomId);
         }
 
@@ -57,7 +58,7 @@ namespace HotelBooking.Infrastructure.Repository
 
         public async Task<IEnumerable<Room>> SearchRoomsAsync(int hotelId, int? capacity, decimal? minPrice, decimal? maxPrice)
         {
-            var query = _dbContext.Rooms.Where(x => x.HotelId == hotelId);
+            var query = _dbContext.Rooms.Include(r => r.Images).Where(x => x.HotelId == hotelId);
             if (capacity.HasValue)
             {
                 query = query.Where(x => x.Capacity >= capacity.Value);
@@ -83,7 +84,7 @@ namespace HotelBooking.Infrastructure.Repository
 
         public async Task<IEnumerable<Room>> GetPagedByHotelAsync(int hotelId, int pageNumber, int pageSize)
         {
-            return await _dbContext.Rooms.Where(x => x.HotelId == hotelId).OrderBy(x => x.Id).Skip((pageNumber - 1) * pageSize).Take(pageSize).ToListAsync();
+            return await _dbContext.Rooms.Include(r => r.Images).Where(x => x.HotelId == hotelId).OrderBy(x => x.Id).Skip((pageNumber - 1) * pageSize).Take(pageSize).ToListAsync();
         }
 
         public async Task<int> CountByHotelAsync(int hotelId)
@@ -94,7 +95,7 @@ namespace HotelBooking.Infrastructure.Repository
 
         public async Task<(IEnumerable<Room> Items, int TotalCount)> SearchPagedAsync(int? hotelId, int? roomNumber, RoomStatus? status, int? MinPrice, int? maxPrice, int page, int pageSize, string? sortBy , bool descending)
         {
-            var query = _dbContext.Rooms.AsQueryable();
+            var query = _dbContext.Rooms.Include(r => r.Images).AsQueryable();
             if (hotelId.HasValue)
                 query = query.Where(r => r.HotelId == hotelId.Value);
             if (roomNumber.HasValue)
@@ -107,6 +108,16 @@ namespace HotelBooking.Infrastructure.Repository
                 query = query.Where(r => r.PricePerNight <= maxPrice.Value);
 
             return await GetPagedTotalAsync(query, page, pageSize, sortBy, descending);
+        }
+
+        public async Task<List<Room>> GetAllRoomsAsync()
+        {
+            return await _dbContext.Rooms.Include(r => r.Images).ToListAsync();
+        }
+
+        public async Task<Room?> GetByRoomIdAsync(int roomId)
+        {
+            return await _dbContext.Rooms.Include(r => r.Images).FirstOrDefaultAsync(r => r.Id == roomId); 
         }
     }
 }

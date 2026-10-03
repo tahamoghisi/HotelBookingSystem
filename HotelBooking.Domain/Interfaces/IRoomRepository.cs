@@ -10,6 +10,8 @@ namespace HotelBooking.Domain.Interfaces
 {
     public interface IRoomRepository : IGenericRepositoy<Room>
     {
+        Task<List<Room>> GetAllRoomsAsync();
+        Task<Room?> GetByRoomIdAsync(int roomId);
         Task<IEnumerable<Room>> GetAviablelRooms();
         Task<Room?> GetByRoomNumberAsync(int roomNumber);
         Task<bool> IsRoomAvailableAsync(int roomId, DateTime checkIn, DateTime checkOut);

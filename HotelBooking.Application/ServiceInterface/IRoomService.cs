@@ -1,6 +1,8 @@
 ﻿using HotelBooking.Application.Common.Models;
 using HotelBooking.Application.DTOs.Hotel;
+using HotelBooking.Application.DTOs.Image;
 using HotelBooking.Application.DTOs.Room;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,6 +24,8 @@ namespace HotelBooking.Application.ServiceInterface
         Task<bool> SetAvailableAsync(int roomId);
         Task<PagedResult<RoomResponseDTO>> GetPagedAsync(int hotelId, int page, int pageSize);
         Task<PagedResult<RoomResponseDTO>> SearchPagedAsync(int? hotelId,int? roomNumber, RoomStatus? status, int? MinPrice, int? maxPrice,PaginationRequest pagination, SortingRequest sorting);// صرچ و صفحه بندی و مرتب سازی
+        Task<List<RoomImageResponseDTO>> AddRoomImagesAsync(int roomId, List<IFormFile> images);
+
 
 
     }
