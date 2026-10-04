@@ -182,5 +182,17 @@ namespace HotelBooking.Infrastructure.Repository
                 query = query.Where(b => b.CheckInDate <= checkInTo.Value);
             return await GetPagedTotalAsync(query, page, pageSize, sortBy, descending);
         }
+
+        public async Task<bool> HasCurrentBookingAsync(int roomId, int currentBookingId)
+        {
+            var now = DateTime.Now;
+
+            return await _dbContext.Bookings.AnyAsync(b =>
+                b.RoomId == roomId &&
+                b.Id != currentBookingId &&
+                b.Status != BookingStatus.Cancelled &&
+                b.CheckInDate <= now &&
+                b.CheckOutDate > now);
+        }
     }
 }

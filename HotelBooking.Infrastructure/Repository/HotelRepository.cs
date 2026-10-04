@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static HotelBooking.Domain.Entities.Room;
 
 namespace HotelBooking.Infrastructure.Repository
 {
@@ -49,6 +50,14 @@ namespace HotelBooking.Infrastructure.Repository
             return await _dbContext.Hotels.Include(h => h.Images).FirstOrDefaultAsync(h => h.Id == hotelId);
         }
 
+        public async Task<bool> HasActiveRoomsAsync(int hotelId)
+        {
+            return await _dbContext.Rooms
+                .AnyAsync(x =>
+                    x.HotelId == hotelId &&
+                    (x.Status == RoomStatus.Reserved ||
+                     x.Status == RoomStatus.Occupied));
+        }
         public async Task<Hotel?> GetByNameAsync(string name)
         {
             return await _dbContext.Hotels.Include(h => h.Images)

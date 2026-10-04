@@ -17,6 +17,7 @@ namespace HotelBooking.Domain.Interfaces
         Task<IEnumerable<Hotel>> GetByStarRatingAsync(int starRating);
         Task<IEnumerable<Hotel>> GetActiveHotelsAsync();
         Task<Hotel?> GetHotelWithRoomsAsync(int hotelId);
+        Task<bool> HasActiveRoomsAsync(int hotelId);
         Task<IEnumerable<Hotel>> SearchHotelsAsync(string? city, int? minStarRating, int? maxStarRating);
         Task<IEnumerable<Hotel>> SearchHotelsAsync(string? name,string? city,int? minStars);
         Task<bool> ExistsByNameAsync(string name);

@@ -23,7 +23,7 @@ namespace HotelBooking.Infrastructure.Service
     {
         private readonly IUnitOFWork _unitOFWork;
         private readonly ILogger<BookingService> _logger;
-        public BookingService(IUnitOFWork unitOFWork,ILogger<BookingService> logger)
+        public BookingService(IUnitOFWork unitOFWork, ILogger<BookingService> logger)
         {
             _logger = logger;
             _unitOFWork = unitOFWork;
@@ -70,12 +70,17 @@ namespace HotelBooking.Infrastructure.Service
             var room = await _unitOFWork.Rooms.GetByIdAsync(dto.RoomId);
             if (room == null)
             {
-                _logger.LogWarning("Room {RoomId} not found for User {UserId}",dto.RoomId,userId);
+                _logger.LogWarning("Room {RoomId} not found for User {UserId}", dto.RoomId, userId);
                 throw new ArgumentException("Room Not Found!");
+            }
+            if (room.Status == RoomStatus.Maintenance)
+            {
+                _logger.LogWarning("Room {RoomId} is not accessible for User {UserId}", dto.RoomId, userId);
+                throw new ArgumentException("Room is not accessible!");
             }
             if (dto.CheckInDate >= dto.CheckOutDate)
             {
-                _logger.LogWarning("Invalid booking dates provided by User {UserId}. CheckIn: {CheckIn}, CheckOut: {CheckOut}.",userId,dto.CheckInDate,dto.CheckOutDate);
+                _logger.LogWarning("Invalid booking dates provided by User {UserId}. CheckIn: {CheckIn}, CheckOut: {CheckOut}.", userId, dto.CheckInDate, dto.CheckOutDate);
                 throw new ArgumentException(
                     "Check-out date must be after check-in date.");
             }
@@ -88,14 +93,34 @@ namespace HotelBooking.Infrastructure.Service
             var hotel = await _unitOFWork.Hotels.GetByIdAsync(dto.HotelId);
             if (hotel == null)
             {
-                _logger.LogWarning("Hotel {HotelId} not found for User {UserId}",dto.HotelId,userId);
+                _logger.LogWarning("Hotel {HotelId} not found for User {UserId}", dto.HotelId, userId);
                 throw new ArgumentException("Hotel Not Found!");
+            }
+            if (room.HotelId != dto.HotelId)
+            {
+                _logger.LogWarning(
+                    "Room {RoomId} does not belong to Hotel {HotelId}. User: {UserId}",
+                    dto.RoomId,
+                    dto.HotelId,
+                    userId);
+
+                throw new ArgumentException(
+                    "The selected room does not belong to the selected hotel.");
             }
             var available = await _unitOFWork.Rooms.IsRoomAvailableAsync(dto.RoomId, dto.CheckInDate, dto.CheckOutDate);
             if (!available)
             {
-                _logger.LogWarning("Room {RoomId} is not available for User {UserId}.",dto.RoomId,userId);
+                _logger.LogWarning("Room {RoomId} is not available for User {UserId}.", dto.RoomId, userId);
                 throw new InvalidOperationException("Room is not available for the selected dates.");
+            }
+            if (dto.CheckInDate < DateTime.Now)
+            {
+                _logger.LogWarning(
+                    "Cannot create Booking because CheckInDate is in the past. User {UserId}",
+                    userId);
+
+                throw new ArgumentException(
+                    "Check-in date cannot be in the past.");
             }
             var booking = BookingMapping.ToEntity(dto);
             booking.CustomerId = customer.Id;
@@ -107,7 +132,7 @@ namespace HotelBooking.Infrastructure.Service
 
             await _unitOFWork.Bookings.AddAsync(booking);
             await _unitOFWork.SaveChangesAsync();
-            _logger.LogInformation("Booking {BookingId} created successfully by User {UserId}.", booking.Id,userId);
+            _logger.LogInformation("Booking {BookingId} created successfully by User {UserId}.", booking.Id, userId);
             //_logger.LogDebug("This is a Debug log.");
 
             //_logger.LogInformation("This is an Information log.");
@@ -179,7 +204,7 @@ namespace HotelBooking.Infrastructure.Service
                 throw new ArgumentException(
                     "Check-out date must be after check-in date.");
             }
-               
+
             var customer = await _unitOFWork.Customers.GetByIdAsync(dto.CustomerId);
 
             if (customer == null)
@@ -203,6 +228,32 @@ namespace HotelBooking.Infrastructure.Service
                 _logger.LogWarning("Room {RoomId} not found for booking {BookingId}", dto.RoomId, booking.Id);
                 throw new ArgumentException("Room not found.");
             }
+            if (room.Status == RoomStatus.Maintenance)
+            {
+                _logger.LogWarning("Room {RoomId} is not accessible for Booking {BookingId}", dto.RoomId, booking.Id);
+                throw new ArgumentException("Room is not accessible!");
+            }
+            if (room.HotelId != dto.HotelId)
+            {
+                _logger.LogWarning(
+                    "Room {RoomId} does not belong to Hotel {HotelId} for Booking {BookingId}",
+                    dto.RoomId,
+                    dto.HotelId,
+                    booking.Id);
+
+                throw new ArgumentException(
+                    "The selected room does not belong to the selected hotel.");
+            }
+            if (booking.Status != BookingStatus.Pending)
+            {
+                _logger.LogWarning(
+                    "Cannot update Booking {BookingId} because its status is {Status}.",
+                    booking.Id,
+                    booking.Status);
+
+                throw new InvalidOperationException(
+                    "Only pending or confirmed bookings can be updated.");
+            }
 
             var available = await _unitOFWork.Bookings.IsRoomAvailableAsync(
                 dto.RoomId,
@@ -216,6 +267,16 @@ namespace HotelBooking.Infrastructure.Service
                 throw new InvalidOperationException(
                     "Room is not available for the selected dates.");
             }
+            if (dto.CheckInDate < DateTime.Now)
+            {
+                _logger.LogWarning(
+                    "Cannot update Booking because CheckInDate is in the past. Booking {BookingId}",
+                    booking.Id);
+
+                throw new ArgumentException(
+                    "Check-in date cannot be in the past.");
+            }
+            
 
             var nights = (dto.CheckOutDate - dto.CheckInDate).Days;
             booking.CheckOutDate = dto.CheckOutDate;
@@ -242,13 +303,23 @@ namespace HotelBooking.Infrastructure.Service
                 throw new InvalidOperationException(
                     "Only pending bookings can be confirmed.");
             }
-                
+
             var room = await _unitOFWork.Rooms.GetByIdAsync(booking.RoomId);
 
             if (room == null)
             {
                 _logger.LogWarning("Room {RoomId} not found for booking {BookingId}", booking.RoomId, booking.Id);
                 throw new ArgumentException("Room Not Found!");
+            }
+            if (room.Status == RoomStatus.Maintenance)
+            {
+                _logger.LogWarning(
+                    "Room {RoomId} is under maintenance for Booking {BookingId}",
+                    room.Id,
+                    booking.Id);
+
+                throw new InvalidOperationException(
+                    "Room is under maintenance.");
             }
 
             var available = await _unitOFWork.Bookings.IsRoomAvailableAsync(
@@ -263,7 +334,7 @@ namespace HotelBooking.Infrastructure.Service
                 throw new InvalidOperationException(
                     "Room is no longer available for the selected dates.");
             }
-            
+
 
             booking.Status = BookingStatus.Confirmed;
 
@@ -290,7 +361,7 @@ namespace HotelBooking.Infrastructure.Service
                 throw new InvalidOperationException(
                     "Only confirmed bookings can be checked in.");
             }
-            
+
 
             var room = await _unitOFWork.Rooms.GetByIdAsync(booking.RoomId);
 
@@ -298,6 +369,37 @@ namespace HotelBooking.Infrastructure.Service
             {
                 _logger.LogWarning("Room {RoomId} not found for booking {BookingId}", booking.RoomId, booking.Id);
                 throw new ArgumentException("Room Not Found!");
+            }
+            if (room.Status == RoomStatus.Maintenance)
+            {
+                _logger.LogWarning(
+                    "Room {RoomId} is under maintenance for Booking {BookingId}",
+                    room.Id,
+                    booking.Id);
+
+                throw new InvalidOperationException(
+                    "Room is under maintenance.");
+            }
+
+            var now = DateTime.Now;
+
+            if (now < booking.CheckInDate)
+            {
+                _logger.LogWarning(
+                    "Cannot check in Booking {BookingId} before CheckInDate.",
+                    booking.Id);
+
+                throw new InvalidOperationException(
+                    "Check-in date has not arrived yet.");
+            }
+            if (now >= booking.CheckOutDate)
+            {
+                _logger.LogWarning(
+                    "Cannot check in Booking {BookingId} because CheckOutDate has passed.",
+                    booking.Id);
+
+                throw new InvalidOperationException(
+                    "The check-out date has already passed.");
             }
 
             booking.Status = BookingStatus.CheckedIn;
@@ -335,21 +437,32 @@ namespace HotelBooking.Infrastructure.Service
             }
 
             booking.Status = BookingStatus.Completed;
-            room.Status = RoomStatus.Available;
+
+            var hasCurrentBooking =
+                    await _unitOFWork.Bookings.HasCurrentBookingAsync(booking.RoomId, booking.Id);
+
+            if (hasCurrentBooking)
+            {
+                room.Status = RoomStatus.Reserved;
+            }
+            else
+            {
+                room.Status = RoomStatus.Available;
+            }
 
             _unitOFWork.Bookings.Update(booking);
             _unitOFWork.Rooms.Update(room);
 
             await _unitOFWork.SaveChangesAsync();
-            _logger.LogInformation("booking {BookingId} checked out successfully.",booking.Id);
+            _logger.LogInformation("booking {BookingId} checked out successfully.", booking.Id);
 
             return true;
         }
 
         public async Task<PagedResult<BookingResponseDTO>> GetPagedAsync(int page, int pageSize, int? hotelId, int? customerId, int? roomId, BookingStatus? status)
         {
-            var totalCount = await _unitOFWork.Bookings.CountFilteredAsync(hotelId,customerId,roomId,status);
-            var pageItems = await _unitOFWork.Bookings.GetBookingPagedAsync(page,pageSize,hotelId,customerId,roomId,status);
+            var totalCount = await _unitOFWork.Bookings.CountFilteredAsync(hotelId, customerId, roomId, status);
+            var pageItems = await _unitOFWork.Bookings.GetBookingPagedAsync(page, pageSize, hotelId, customerId, roomId, status);
             var dto = pageItems.Select(x => BookingMapping.ToDto(x)).ToList();
             return new PagedResult<BookingResponseDTO>
             {
@@ -379,7 +492,7 @@ namespace HotelBooking.Infrastructure.Service
             if (customer == null) return null;
             var booking = await _unitOFWork.Bookings.GetBookingByIdAsync(bookingId);
             if (booking == null) return null;
-            if (booking.CustomerId !=  customer.Id) return null;
+            if (booking.CustomerId != customer.Id) return null;
             return BookingMapping.ToDto(booking);
         }
     }

@@ -73,14 +73,6 @@ namespace HotelBooking.Infrastructure.Repository
             }
             return await query.ToListAsync();
         }
-        public async Task<bool> HasActiveRoomsAsync(int hotelId)
-        {
-            return await _dbContext.Rooms
-                .AnyAsync(x =>
-                    x.HotelId == hotelId &&
-                    (x.Status == RoomStatus.Reserved ||
-                     x.Status == RoomStatus.Occupied));
-        }
 
         public async Task<IEnumerable<Room>> GetPagedByHotelAsync(int hotelId, int pageNumber, int pageSize)
         {

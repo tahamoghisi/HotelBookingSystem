@@ -48,7 +48,7 @@ namespace HotelBooking.Infrastructure.Service
         {
             var hotel = await _unitOFWork.Hotels.GetByIdAsync(id);
             if (hotel == null) return false;
-            var hasActiveRooms = await _unitOFWork.Rooms.HasActiveRoomsAsync(hotel.Id);
+            var hasActiveRooms = await _unitOFWork.Hotels.HasActiveRoomsAsync(hotel.Id);
             if (hasActiveRooms)
             {
                 _logger.LogWarning("Cannot delete hotel {HotelId} because it has active rooms.", hotel.Id);
