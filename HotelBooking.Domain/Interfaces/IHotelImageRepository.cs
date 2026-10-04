@@ -14,5 +14,6 @@ namespace HotelBooking.Domain.Interfaces
         Task<bool> DeleteAsync(int imageId);
         Task<HotelImage?> GetByIdAsync(int hotelId,int imageId);
         Task<bool> SetMainImageAsync(int hotelId, int imageId);
+        Task<HotelImage?> GetFirstImageAsync(int hotelId);
     }
 }

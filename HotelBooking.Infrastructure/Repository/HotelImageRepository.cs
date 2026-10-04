@@ -35,6 +35,11 @@ namespace HotelBooking.Infrastructure.Repository
             return await _dbContext.HotelImages.FirstOrDefaultAsync(i => i.Id == imageId && i.HotelId == hotelId);
         }
 
+        public async Task<HotelImage?> GetFirstImageAsync(int hotelId)
+        {
+            return await _dbContext.HotelImages.Where(i => i.HotelId == hotelId).OrderBy(i => i.Id).FirstOrDefaultAsync();
+        }
+
         public async Task<bool> HasMainImageAsync(int hotelId)
         {
             return await _dbContext.HotelImages
@@ -45,8 +50,6 @@ namespace HotelBooking.Infrastructure.Repository
         {
             var image = await _dbContext.HotelImages.FirstOrDefaultAsync(i => i.HotelId==hotelId && i.Id == imageId);
             if (image == null) return false;
-            if (image == null)
-                return false;
 
             var hotelImages = await _dbContext.HotelImages
                 .Where(i => i.HotelId == hotelId)

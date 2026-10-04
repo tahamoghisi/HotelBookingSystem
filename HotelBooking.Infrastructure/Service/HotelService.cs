@@ -197,16 +197,27 @@ namespace HotelBooking.Infrastructure.Service
         {
             var image = await _unitOFWork.HotelImage.GetByIdAsync(hotelId, imageId);
             if (image == null) return false;
+            var wasMain = image.IsMain;
             var filePath = Path.Combine(
             Directory.GetCurrentDirectory(),
             "wwwroot",
             image.ImageUrl.TrimStart('/').Replace("/", Path.DirectorySeparatorChar.ToString()));
-            
+
             if (File.Exists(filePath))
             {
                 File.Delete(filePath);
             }
             await _unitOFWork.HotelImage.DeleteAsync(imageId);
+            if (wasMain)
+            {
+                var firstImage = await _unitOFWork.HotelImage
+                 .GetFirstImageAsync(hotelId);
+
+                if (firstImage != null)
+                {
+                    firstImage.IsMain = true;
+                }
+            }
             await _unitOFWork.SaveChangesAsync();
             return true;
         }

@@ -215,6 +215,43 @@ namespace HotelBooking.Infrastructure.Service
                 IsMain = x.IsMain
             }).ToList();
         }
+        public async Task<bool> DeleteRoomImageAsync(int roomId, int imageId)
+        {
+            var image = await _unitOFWork.RoomImage.GetByIdAsync(roomId, imageId);
+            if (image == null) return false;
+            var wasMain = image.IsMain;
+            var filePath = Path.Combine(
+            Directory.GetCurrentDirectory(),
+            "wwwroot",
+            image.ImageUrl.TrimStart('/').Replace("/", Path.DirectorySeparatorChar.ToString()));
+
+            if (File.Exists(filePath))
+            {
+                File.Delete(filePath);
+            }
+            await _unitOFWork.RoomImage.DeleteAsync(imageId);
+            if (wasMain)
+            {
+                var firstImage = await _unitOFWork.RoomImage
+                 .GetFirstImageAsync(roomId);
+
+                if (firstImage != null)
+                {
+                    firstImage.IsMain = true;
+                }
+            }
+            await _unitOFWork.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> SetMainRoomImageAsync(int roomId, int imageId)
+        {
+            var result = await _unitOFWork.RoomImage.SetMainImageAsync(roomId, imageId);
+            if (result == false) return false;
+            await _unitOFWork.SaveChangesAsync();
+            return true;
+        }
+
         #region MaintenanceStatus
         public async Task<bool> SetMaintenanceAsync(int roomId)
         {
@@ -262,7 +299,6 @@ namespace HotelBooking.Infrastructure.Service
 
             return true;
         }
-
 
         #endregion
     }

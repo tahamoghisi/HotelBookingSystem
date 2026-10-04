@@ -119,11 +119,35 @@ namespace HotelBooking.API.Controllers
         }
         [HttpPost("{roomId}/images")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> AddHotelImages(int roomId, [FromForm] List<IFormFile> images)
+        public async Task<IActionResult> AddRoomImages(int roomId, [FromForm] List<IFormFile> images)
         {
             var result = await _roomService.AddRoomImagesAsync(roomId, images);
 
             return Ok(ApiResponse<List<RoomImageResponseDTO>>.Ok(result));
+        }
+        [HttpDelete("{roomId}/images/{imageId}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> DeleteRoomImage(int roomId, int imageId)
+        {
+            var result = await _roomService.DeleteRoomImageAsync(roomId, imageId);
+
+            if (!result)
+                return NotFound(ApiResponse<string>.Fail("Room image not found."));
+
+            return Ok(ApiResponse<string>.Ok(
+                "Room image deleted successfully."));
+        }
+        [HttpPut("{roomId}/images/{imageId}/main")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> SetMainRoomImage(int roomId, int imageId)
+        {
+            var result = await _roomService.SetMainRoomImageAsync(roomId, imageId);
+
+            if (!result)
+                return NotFound(ApiResponse<string>.Fail("Room image not found."));
+
+            return Ok(ApiResponse<string>.Ok(
+                "Room image set as main successfully."));
         }
     }
 }
