@@ -23,6 +23,7 @@ namespace HotelBooking.Infrastructure
         public DbSet<User> Users { get; set; }
         public DbSet<HotelImage> HotelImages { get; set; }
         public DbSet<RoomImage> RoomImages { get; set; }
+        public DbSet<RefreshToken> RefreshToken {  get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -166,7 +167,7 @@ namespace HotelBooking.Infrastructure
 
 
 
-
+            // Images
             modelBuilder.Entity<HotelImage>()
            .HasOne(x => x.Hotel)
            .WithMany(x => x.Images)
@@ -181,6 +182,17 @@ namespace HotelBooking.Infrastructure
            .WithMany(x => x.Images)
            .HasForeignKey(x => x.RoomId)
            .OnDelete(DeleteBehavior.Cascade);
+
+
+
+
+            //RefreshToken
+
+            modelBuilder.Entity<RefreshToken>()
+                .HasOne(x => x.User)
+                .WithMany(x => x.RefreshTokens)
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

@@ -12,5 +12,6 @@ namespace HotelBooking.Domain.Entities
         public string Password { get; set; }
         public string Role { get; set; }
         public Customer Customer { get; set; }
+        public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
     }
 }

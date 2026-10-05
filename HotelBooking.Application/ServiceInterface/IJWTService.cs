@@ -11,5 +11,6 @@ namespace HotelBooking.Domain.Interfaces
     public interface IJWTService
     {
         ResultToken GenerateToken (User user);
+        string GenerateRefreshToken();
     }
 }
