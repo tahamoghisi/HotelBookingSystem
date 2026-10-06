@@ -37,7 +37,7 @@ namespace HotelBooking.API.Controllers
             return Ok(booking);
         }
         //صفخه بندی و تعداد کل و مرتب سازی
-        [Authorize]
+        [Authorize(Roles = "Admin")]
         [HttpGet("search")]
         public async Task<IActionResult> Search([FromQuery] int? customerId, [FromQuery] int? roomId, [FromQuery] BookingStatus? status, [FromQuery] DateTime? checkInFrom, [FromQuery] DateTime? checkInTo, [FromQuery] PaginationRequest pagination, [FromQuery] SortingRequest sorting)
         {
@@ -45,7 +45,7 @@ namespace HotelBooking.API.Controllers
 
             return Ok(result);
         }
-        [Authorize]
+        [Authorize(Roles = "Admin")]
         [HttpGet("paged")]
         public async Task<IActionResult> GetPaged(int page = 1, int pageSize = 10, int? hotelId = null, int? customerId = null, int? roomId = null, BookingStatus? status = null)
         {
@@ -60,7 +60,7 @@ namespace HotelBooking.API.Controllers
 
             return Ok(result);
         }
-        [Authorize]
+        [Authorize(Roles = "Admin")]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
@@ -72,7 +72,7 @@ namespace HotelBooking.API.Controllers
             return Ok(booking);
         }
         [Authorize]
-        [HttpGet("{bookingId}")]
+        [HttpGet("my-bookings/{bookingId}")]
         public async Task<IActionResult> GetByIdForUser(int bookingId)
         {
             var userId = int.Parse(
@@ -84,7 +84,7 @@ namespace HotelBooking.API.Controllers
 
             return Ok(booking);
         }
-        [Authorize]
+        [Authorize(Roles = "User,Admin")]
         [HttpPost]
         public async Task<IActionResult> Create(CreateBookingDTO dto)
         {

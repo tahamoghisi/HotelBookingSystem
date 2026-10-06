@@ -26,6 +26,8 @@ using HotelBooking.Application.Validator.Booking;
 using HotelBooking.Application.Validator.Pagging;
 using HotelBooking.Application.Validator.Sorting;
 using Serilog;
+using HotelBooking.Application.Common.Models;
+using Microsoft.AspNetCore.Mvc;
 ;
 
 
@@ -48,6 +50,28 @@ builder.Services.AddControllers()
     {
         options.JsonSerializerOptions.Converters.Add(
             new JsonStringEnumConverter());
+    })
+    .ConfigureApiBehaviorOptions(options =>
+    {
+        options.InvalidModelStateResponseFactory = context =>
+        {
+            var errors = context.ModelState
+                .Where(x => x.Value?.Errors.Count > 0)
+                .SelectMany(x => x.Value!.Errors.Select(error => new ApiError
+                {
+                    Code = "VALIDATION_ERROR",
+                    Message = string.IsNullOrWhiteSpace(error.ErrorMessage)
+                        ? "Invalid value."
+                        : error.ErrorMessage
+                }))
+                .ToList();
+
+            var response = ApiResponse<object>.Fail(
+                "Validation failed.",
+                errors);
+
+            return new BadRequestObjectResult(response);
+        };
     });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
@@ -119,7 +143,6 @@ builder.Services.AddValidatorsFromAssemblyContaining<PaginationRequestValidator>
 builder.Services.AddValidatorsFromAssemblyContaining<HotelSortingValidator>();
 builder.Services.AddValidatorsFromAssemblyContaining<RoomSortingValidator>();
 builder.Services.AddValidatorsFromAssemblyContaining<CustomerSortingValidator>();
-builder.Services.AddValidatorsFromAssemblyContaining<BookingSortingValidator>();
 builder.Services.AddValidatorsFromAssemblyContaining<BookingSortingValidator>();
 builder.Services.AddValidatorsFromAssemblyContaining<ChangePasswordValidator>();
 

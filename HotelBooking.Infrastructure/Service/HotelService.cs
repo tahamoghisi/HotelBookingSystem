@@ -20,6 +20,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace HotelBooking.Infrastructure.Service
 {
@@ -184,7 +185,7 @@ namespace HotelBooking.Infrastructure.Service
             await _unitOFWork.HotelImage.AddRangeAsync(hotelImages);
 
             await _unitOFWork.SaveChangesAsync();
-
+            _logger.LogInformation("hotel {HotelId} add hotel images successfully", hotelId);
             return hotelImages.Select(x => new HotelImageResponseDTO
             {
                 Id = x.Id,
@@ -196,7 +197,11 @@ namespace HotelBooking.Infrastructure.Service
         public async Task<bool> DeleteHotelImageAsync(int hotelId, int imageId)
         {
             var image = await _unitOFWork.HotelImage.GetByIdAsync(hotelId, imageId);
-            if (image == null) return false;
+            if (image == null)
+            {
+                _logger.LogWarning("hotel {HotelId} delete hotel image {ImageId} failed", hotelId, imageId);
+                return false;
+            }
             var wasMain = image.IsMain;
             var filePath = Path.Combine(
             Directory.GetCurrentDirectory(),
@@ -219,14 +224,20 @@ namespace HotelBooking.Infrastructure.Service
                 }
             }
             await _unitOFWork.SaveChangesAsync();
+            _logger.LogInformation("hotel {HotelId} delete hotel image {ImageId} successfully", hotelId, imageId);
             return true;
         }
 
         public async Task<bool> SetMainHotelImageAsync(int hotelId, int imageId)
         {
             var result = await _unitOFWork.HotelImage.SetMainImageAsync(hotelId, imageId);
-            if (result == false) return false;
+            if (result == false)
+            {
+                _logger.LogWarning("hotel {HotelId} set main hotel image {ImageId} failed", hotelId, imageId);
+                return false;
+            }
             await _unitOFWork.SaveChangesAsync();
+            _logger.LogInformation("hotel {HotelId} set main hotel image {ImageId} successfully", hotelId,imageId);
             return true;
         }
     }
