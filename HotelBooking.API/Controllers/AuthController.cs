@@ -1,4 +1,5 @@
-﻿using HotelBooking.Application.DTOs.Auth;
+﻿using HotelBooking.Application.Common.Models;
+using HotelBooking.Application.DTOs.Auth;
 using HotelBooking.Application.DTOs.User;
 using HotelBooking.Domain.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -47,6 +48,24 @@ namespace HotelBooking.API.Controllers
                 return NotFound();
 
             return NoContent();
+        }
+        [HttpPost("refresh-token")]
+        public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest request)
+        {
+            var result = await _authService.RefreshTokenAsync(request.refreshToken);
+
+            return Ok(ApiResponse<LoginResponse>.Ok(
+                result,
+                "Token refreshed successfully."));
+        }
+        [HttpPost("signout")]
+        public async Task<IActionResult> SignOut([FromBody] RefreshTokenRequest request)
+        {
+            await _authService.LogoutAsync(request.refreshToken);
+
+            return Ok(ApiResponse<object>.Ok(
+                null,
+                "Signed out successfully."));
         }
     }
 }

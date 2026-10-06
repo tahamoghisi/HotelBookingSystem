@@ -58,13 +58,77 @@ namespace HotelBooking.Infrastructure.Service
                 throw new UnauthorizedAccessException("UserName or Password is incorrect");
             }
             _logger.LogInformation("User {UserId} logined successfully.", user.Id);
-            var token = _jwtService.GenerateToken(user);
+            var accesstoken = _jwtService.GenerateToken(user);
+            var refreshToken = _jwtService.GenerateRefreshToken();
+            var RT = new RefreshToken
+            {
+                Token = refreshToken,
+                ExpireAt = DateTime.UtcNow.AddDays(30),
+                IsRevoked = false,
+                UserId = user.Id,
+                User = user
+            };
+            await _unitOFWork.RefreshToken.AddAsync(RT);
+            await _unitOFWork.SaveChangesAsync();
             return new LoginResponse
             {
-                AccessToken = token.AccessToken,
-                ExpiresAt = token.ExpiresAt
+                AccessToken = accesstoken.AccessToken,
+                ExpiresAt = accesstoken.ExpiresAt,
+                RefreshToken = refreshToken,
             };
         }
+
+        public async Task LogoutAsync(string refreshToken)
+        {
+            var RT = await _unitOFWork.RefreshToken.GetByTokenAsync(refreshToken);
+            if (RT == null)
+            {
+                throw new UnauthorizedAccessException("Invalid refresh token.");
+            }
+            RT.IsRevoked = true;
+            await _unitOFWork.SaveChangesAsync();
+        }
+
+        public async Task<LoginResponse> RefreshTokenAsync(string refreshToken)
+        {
+            var RT = await _unitOFWork.RefreshToken.GetByTokenAsync(refreshToken);
+            if (RT  == null)
+            {
+                throw new UnauthorizedAccessException("Invalid refresh token.");
+            }
+            if (RT.IsRevoked)
+            {
+                _logger.LogWarning("Refresh token {RefreshTokenId} is revoked.", RT.Id);
+                throw new UnauthorizedAccessException("Refresh token has been revoked.");
+            }
+            if (RT.ExpireAt <= DateTime.UtcNow)
+            {
+                _logger.LogWarning("Refresh token {RefreshTokenId} has expired.", RT.Id);
+                throw new UnauthorizedAccessException("Refresh token has expired.");
+            }
+            RT.IsRevoked = true;
+
+            var newRefreshToken = _jwtService.GenerateRefreshToken();
+
+            var newRT = new RefreshToken
+            {
+                Token = newRefreshToken,
+                ExpireAt = DateTime.UtcNow.AddDays(30),
+                IsRevoked = false,
+                UserId = RT.UserId,
+                User = RT.User
+            };
+            await _unitOFWork.SaveChangesAsync();
+            await _unitOFWork.RefreshToken.AddAsync(newRT);
+            var accesstoken = _jwtService.GenerateToken(RT.User);
+            return new LoginResponse
+            {
+                AccessToken = accesstoken.AccessToken,
+                ExpiresAt = accesstoken.ExpiresAt,
+                RefreshToken = newRT.Token,
+            };    
+        }
+
         //public async Task<bool> Register(RegisterDto registerDto)
         //{
         //    if (registerDto == null)

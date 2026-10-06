@@ -19,7 +19,8 @@ namespace HotelBooking.Infrastructure.Repository
         IBookingRepository bookings,
         IUserRepository users,
         IHotelImageRepository hotelImageRepository,
-        IRoomImageRepository roomImageRepository
+        IRoomImageRepository roomImageRepository,
+        IRefreshTokenRepository refreshTokenRepository
            
             )
         {
@@ -31,6 +32,7 @@ namespace HotelBooking.Infrastructure.Repository
             User = users;
             HotelImage = hotelImageRepository;
             RoomImage = roomImageRepository;
+            RefreshToken = refreshTokenRepository;
 
         }
         public IHotelRepository Hotels { get; }
@@ -44,6 +46,7 @@ namespace HotelBooking.Infrastructure.Repository
         public IUserRepository User { get; }
         public IHotelImageRepository HotelImage { get; }
         public IRoomImageRepository RoomImage { get; }
+        public IRefreshTokenRepository RefreshToken { get; }
 
         public void Dispose()
         {

@@ -74,6 +74,8 @@ builder.Services.AddSwaggerGen(options =>
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 //builder.Services.AddOpenApi();
 
+
+//DI
 builder.Services.AddScoped<IHotelRepository, HotelRepository>();
 builder.Services.AddScoped<IRoomRepository, RoomRepository>();
 builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
@@ -91,6 +93,7 @@ builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IHotelImageRepository, HotelImageRepository>();
 builder.Services.AddScoped<IRoomImageRepository, RoomImageRepository>();
+builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 
 
 
