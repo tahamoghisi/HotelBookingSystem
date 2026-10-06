@@ -59,7 +59,7 @@ namespace HotelBooking.Infrastructure.Repository
             {
                 hotelImage.IsMain = hotelImage.Id == imageId;
             }
-            return true;
+            return true;            
         }
     }
 }

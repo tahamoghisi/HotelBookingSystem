@@ -13,8 +13,9 @@ namespace HotelBooking.Infrastructure.Repository
     {
         private readonly ApplicationDBContext _dbContext;
         private readonly IUnitOFWork _unitOFWork;
-        public AccountRepository(ApplicationDBContext dbContext)
+        public AccountRepository(ApplicationDBContext dbContext,IUnitOFWork unitOFWork)
         {
+            _unitOFWork = unitOFWork;
             _dbContext = dbContext;
         }
         public Task<bool> Login(User loginUser)
