@@ -438,8 +438,7 @@ namespace HotelBooking.Infrastructure.Service
 
             booking.Status = BookingStatus.Completed;
 
-            var hasCurrentBooking =
-                    await _unitOFWork.Bookings.HasCurrentBookingAsync(booking.RoomId, booking.Id);
+            var hasCurrentBooking = await _unitOFWork.Bookings.HasCurrentBookingAsync(booking.RoomId, booking.Id);
 
             if (hasCurrentBooking)
             {

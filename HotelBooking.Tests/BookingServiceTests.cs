@@ -18,6 +18,165 @@ namespace HotelBooking.Tests
     public class BookingServiceTests
     {
         [Fact]
+        public async Task GetByIdForUserAsync_Should_Return_Null_When_Booking_Belongs_To_Another_User()
+        {
+            var customer = new Customer
+            {
+                Id = 1,
+                UserId = 1,
+                NationalCode = "123",
+                FullName = "Ali",
+            };
+            var booking = new Booking
+            {
+                Id = 1,
+                CustomerId = 2,
+            };
+            var unitOfWork = new Mock<IUnitOFWork>();
+            var logger = new Mock<ILogger<BookingService>>();
+            unitOfWork.Setup(x => x.Customers.GetByUserIdAsync(1)).ReturnsAsync(customer);
+            unitOfWork.Setup(x => x.Bookings.GetByIdAsync(1)).ReturnsAsync(booking);
+            var service = new BookingService(unitOfWork.Object, logger.Object);
+
+            var result = await service.GetByIdForUserAsync(1,1);
+            Assert.Null(result);
+        }
+        [Fact]
+        public async Task CheckOutAsync_Should_Set_Room_Status_To_Reserved_When_Current_Booking_Exists()
+        {
+            var booking = new Booking
+            {
+                Id = 1,
+                RoomId = 10,
+                Status = BookingStatus.CheckedIn,
+                CheckInDate = DateTime.Now.Date,
+                CheckOutDate = DateTime.Now.Date.AddDays(2)
+            };
+
+            var room = new Room
+            {
+                Id = 10,
+                Status = RoomStatus.Occupied
+            };
+            var unitOfWork = new Mock<IUnitOFWork>();
+            var logger = new Mock<ILogger<BookingService>>();
+            unitOfWork.Setup(x => x.Bookings.GetByIdAsync(1)).ReturnsAsync(booking);
+
+            unitOfWork.Setup(x => x.Rooms.GetByIdAsync(10)).ReturnsAsync(room);
+
+            unitOfWork.Setup(x => x.Bookings.HasCurrentBookingAsync(10, 1)).ReturnsAsync(true);
+            var service = new BookingService(unitOfWork.Object, logger.Object);
+
+            var result = await service.CheckOutAsync(1);
+            Assert.True(result);
+
+            Assert.Equal(RoomStatus.Reserved, room.Status);
+        }
+        [Fact]
+        public async Task CheckOutAsync_Should_Set_Room_Status_To_Available_When_No_Current_Booking_Exists()
+        {
+            var booking = new Booking
+            {
+                Id = 1,
+                RoomId = 10,
+                Status = BookingStatus.CheckedIn,
+                CheckInDate = DateTime.Now.Date,
+                CheckOutDate = DateTime.Now.Date.AddDays(2)
+            };
+
+            var room = new Room
+            {
+                Id = 10,
+                Status = RoomStatus.Occupied
+            };
+            var unitOfWork = new Mock<IUnitOFWork>();
+            var logger = new Mock<ILogger<BookingService>>();
+            unitOfWork.Setup(x => x.Bookings.GetByIdAsync(1)).ReturnsAsync(booking);
+
+            unitOfWork.Setup(x => x.Rooms.GetByIdAsync(10)).ReturnsAsync(room);
+
+            unitOfWork.Setup(x => x.Bookings.HasCurrentBookingAsync(10,1)).ReturnsAsync(false);
+            var service = new BookingService(unitOfWork.Object, logger.Object);
+
+            var result = await service.CheckOutAsync(1);
+            Assert.True(result);
+
+            Assert.Equal(RoomStatus.Available,room.Status);
+        }
+        [Fact]
+        public async Task CheckOutAsync_Should_Return_False_When_Booking_NotFound()
+        {
+            var unitOfWork = new Mock<IUnitOFWork>();
+            var logger = new Mock<ILogger<BookingService>>();
+
+            unitOfWork.Setup(x => x.Bookings.GetByIdAsync(1)).ReturnsAsync((Booking?)null);
+
+            var service = new BookingService(unitOfWork.Object, logger.Object);
+
+            var result = await service.CheckOutAsync(1);
+
+            Assert.False(result);
+
+            unitOfWork.Verify(
+                x => x.SaveChangesAsync(It.IsAny<CancellationToken>()),
+                Times.Never);
+        }
+        [Fact]
+        public async Task CheckOutAsync_Should_Throw_When_Booking_IsNot_CheckIn()
+        {
+            var booking = new Booking
+            {
+                Id = 1,
+                RoomId = 10,
+                Status = BookingStatus.Confirmed,
+                CheckInDate = DateTime.Now.Date,
+                CheckOutDate = DateTime.Now.Date.AddDays(2)
+            };
+            var unitOfWork = new Mock<IUnitOFWork>();
+            var logger = new Mock<ILogger<BookingService>>();
+
+            unitOfWork.Setup(x => x.Bookings.GetByIdAsync(1)).ReturnsAsync(booking);
+
+            var service = new BookingService(unitOfWork.Object, logger.Object);
+
+            await Assert.ThrowsAsync<InvalidOperationException>(
+                () => service.CheckOutAsync(1));
+        }
+
+
+
+        [Fact]
+        public async Task CheckInAsync_Should_Throw_When_CheckInDate_Is_Bigger_Than_Now()
+        {
+            var booking = new Booking
+            {
+                Id = 1,
+                RoomId = 10,
+                Status = BookingStatus.Confirmed,
+                CheckInDate = DateTime.Now.Date.AddDays(1),
+                CheckOutDate = DateTime.Now.Date.AddDays(2)
+            };
+
+            var room = new Room
+            {
+                Id = 10,
+                Status = RoomStatus.Available
+            };
+            var unitOfWork = new Mock<IUnitOFWork>();
+            var logger = new Mock<ILogger<BookingService>>();
+
+            unitOfWork.Setup(x => x.Bookings.GetByIdAsync(1)).ReturnsAsync(booking);
+            unitOfWork.Setup(x => x.Rooms.GetByIdAsync(10)).ReturnsAsync(room);
+
+            var service = new BookingService(unitOfWork.Object, logger.Object);
+
+            await Assert.ThrowsAsync<InvalidOperationException>(
+                () => service.CheckInAsync(1));
+
+        }
+
+
+        [Fact]
         public async Task ConfirmAsync_Should_Confirm_Pending_Booking()
         {
             // Arrange
@@ -25,7 +184,9 @@ namespace HotelBooking.Tests
             {
                 Id = 1,
                 RoomId = 10,
-                Status = BookingStatus.Pending
+                Status = BookingStatus.Pending,
+                CheckInDate = DateTime.Now.Date,
+                CheckOutDate = DateTime.Now.Date.AddDays(2)
             };
 
             var room = new Room
@@ -56,6 +217,13 @@ namespace HotelBooking.Tests
             Assert.True(result);
             Assert.Equal(BookingStatus.Confirmed, booking.Status);
             Assert.Equal(RoomStatus.Reserved, room.Status);
+
+
+            unitOfWork.Verify(x => x.Bookings.Update(booking), Times.Once);
+
+            unitOfWork.Verify(x => x.Rooms.Update(room), Times.Once);
+
+            unitOfWork.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]
@@ -186,7 +354,7 @@ namespace HotelBooking.Tests
                     createBookingDto.CheckOutDate))
                 .ReturnsAsync(true);
 
-            var service = new BookingService(unitOfWork.Object,logger.Object);
+            var service = new BookingService(unitOfWork.Object, logger.Object);
 
             var result = await service.CreateAsync(createBookingDto, userId);
 
