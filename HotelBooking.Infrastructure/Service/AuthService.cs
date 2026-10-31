@@ -4,6 +4,7 @@ using HotelBooking.Application.Mapping.UserMap;
 using HotelBooking.Domain.Entities;
 using HotelBooking.Domain.Interfaces;
 using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -146,31 +147,75 @@ namespace HotelBooking.Infrastructure.Service
 
         public async Task<RegisterResponse> RegisterAsync(RegisterRequest registerRequest)
         {
-            var isExist = await _unitOFWork.User.ExistByUsername(registerRequest.Username);
+            var username = registerRequest.Username?.Trim();
+            var email = registerRequest.Email?.Trim().ToLowerInvariant();
+            var nationalCode = registerRequest.NationalCode?.Trim();
+
+            if (string.IsNullOrWhiteSpace(email))
+                throw new ArgumentException("وارد کردن ایمیل الزامی است.");
+
+            if (string.IsNullOrWhiteSpace(nationalCode))
+                throw new ArgumentException("وارد کردن کد ملی الزامی است.");
+
+            var isExist = await _unitOFWork.User.ExistByUsername(username!);
             if (isExist)
             {
-                _logger.LogWarning("username {UserName} already exist.", registerRequest.Username);
-                throw new Exception("UserName already Exist");
+                _logger.LogWarning("username {UserName} already exists.", username);
+                throw new InvalidOperationException("این نام کاربری قبلاً ثبت شده است.");
             }
+
+            if (await _unitOFWork.Customers.GetByEmailAsync(email) != null)
+            {
+                _logger.LogWarning("email {Email} is already registered.", email);
+                throw new InvalidOperationException("این ایمیل قبلاً ثبت شده است.");
+            }
+
+            if (await _unitOFWork.Customers.GetByNationalCodeAsync(nationalCode) != null)
+            {
+                _logger.LogWarning("national code is already registered.");
+                throw new InvalidOperationException("این کد ملی قبلاً ثبت شده است.");
+            }
+
             var passwordHash = _passwordHasher.Hash(registerRequest.Password);
             var user = new User
             {
-                UserName = registerRequest.Username,
+                UserName = username!,
                 Password = passwordHash,
                 Role = "User"
                 //email , phoneNumber , nationalCode
             };
             var customer = new Customer
             {
-                FullName = registerRequest.Username,
-                Email = registerRequest.Email,
+                FullName = username!,
+                Email = email,
                 PhoneNumber = registerRequest.PhoneNumber,
-                NationalCode = registerRequest.NationalCode,
+                NationalCode = nationalCode,
                 User = user
             };
             await _unitOFWork.User.AddAsync(user);
             await _unitOFWork.Customers.AddAsync(customer);
-            await _unitOFWork.SaveChangesAsync();
+
+            try
+            {
+                await _unitOFWork.SaveChangesAsync();
+            }
+            catch (DbUpdateException exception)
+            {
+                // Keep the unique database indexes as the final guard against simultaneous registrations.
+                if (exception.ToString().Contains("IX_Customers_Email", StringComparison.OrdinalIgnoreCase)
+                    || await _unitOFWork.Customers.GetByEmailAsync(email) != null)
+                {
+                    throw new InvalidOperationException("این ایمیل قبلاً ثبت شده است.", exception);
+                }
+
+                if (exception.ToString().Contains("IX_Customers_NationalCode", StringComparison.OrdinalIgnoreCase)
+                    || await _unitOFWork.Customers.GetByNationalCodeAsync(nationalCode) != null)
+                {
+                    throw new InvalidOperationException("این کد ملی قبلاً ثبت شده است.", exception);
+                }
+
+                throw;
+            }
             _logger.LogInformation("User {UserId} registered successfully.",user.Id);
             var token = _jwtService.GenerateToken(user);
             return new RegisterResponse

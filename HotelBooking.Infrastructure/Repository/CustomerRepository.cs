@@ -38,7 +38,7 @@ namespace HotelBooking.Infrastructure.Repository
         public async Task<Customer?> GetByEmailAsync(string email)
         {
             return await _dbContext.Customers
-                .FirstOrDefaultAsync(x => x.Email == email);
+                .FirstOrDefaultAsync(x => x.Email.ToLower() == email.Trim().ToLower());
         }
 
         public async Task<Customer?> GetByNationalCodeAsync(string nationalCode)

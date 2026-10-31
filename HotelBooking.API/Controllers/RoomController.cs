@@ -14,10 +14,12 @@ namespace HotelBooking.API.Controllers
     public class RoomController : ControllerBase
     {
         private readonly IRoomService _roomService;
+        private readonly IBookingService _bookingService;
 
-        public RoomController(IRoomService roomService)
+        public RoomController(IRoomService roomService, IBookingService bookingService)
         {
             _roomService = roomService;
+            _bookingService = bookingService;
         }
 
         [HttpGet]
@@ -58,6 +60,22 @@ namespace HotelBooking.API.Controllers
                 return NotFound();
 
             return Ok(room);
+        }
+
+        [HttpGet("{id}/availability")]
+        public async Task<IActionResult> CheckAvailability(int id, [FromQuery] DateTime checkInDate, [FromQuery] DateTime checkOutDate)
+        {
+            if (checkInDate >= checkOutDate)
+                return BadRequest("تاریخ خروج باید بعد از تاریخ ورود باشد.");
+
+            var room = await _roomService.GetByIdAsync(id);
+            if (room == null)
+                return NotFound();
+
+            var available = room.Status != RoomStatus.Maintenance
+                && await _bookingService.IsRoomAvailableAsync(id, checkInDate, checkOutDate);
+
+            return Ok(new { isAvailable = available });
         }
 
         [Authorize(Roles = "Admin")]
