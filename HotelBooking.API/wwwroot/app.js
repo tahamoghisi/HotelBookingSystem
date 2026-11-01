@@ -47,16 +47,31 @@
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
   const imageUrl = url => { if (!url) return ''; try { return new URL(url, location.origin).href; } catch { return ''; } };
   const hotelImage = hotel => (hotel.images || []).find(i => i.isMain)?.imageUrl || hotel.images?.[0]?.imageUrl || '';
+  const galleryMarkup = (images, group, alt) => {
+    const photos = images || [];
+    const main = photos.find(image => image.isMain) || photos[0];
+    return `<div class="detail-gallery"><div class="gallery-main">${main ? `<img data-gallery-target="${group}" src="${esc(imageUrl(main.imageUrl))}" alt="${esc(alt)}" loading="lazy">` : '<div class="gallery-placeholder">تصویری برای نمایش ثبت نشده است</div>'}</div>${photos.length > 1 ? `<div class="gallery-thumbs">${photos.map((photo, index) => `<button type="button" class="gallery-thumb${photo === main ? ' active' : ''}" data-gallery-group="${group}" data-gallery-image="${esc(imageUrl(photo.imageUrl))}" aria-label="نمایش تصویر ${index + 1}"><img src="${esc(imageUrl(photo.imageUrl))}" alt="" loading="lazy"></button>`).join('')}</div>` : ''}</div>`;
+  };
   const price = value => `${Number(value || 0).toLocaleString('fa-IR')} تومان`;
   const dateLabel = value => { if (!value) return '—'; const d = new Date(value); return Number.isNaN(+d) ? esc(value) : new Intl.DateTimeFormat('fa-IR', { year: 'numeric', month: 'short', day: 'numeric' }).format(d); };
   const hotelById = id => state.hotels.find(h => Number(h.id) === Number(id));
+  const roomDetailHref = (hotelId, roomId, checkIn, checkOut, guests) => {
+    const params = new URLSearchParams({ hotelId, roomId });
+    if (checkIn) params.set('checkIn', checkIn);
+    if (checkOut) params.set('checkOut', checkOut);
+    if (guests) params.set('guests', guests);
+    return `/room.html?${params}`;
+  };
 
   function updateAuthUI() {
     $('#auth-button').classList.toggle('hidden', isLoggedIn()); $('#logout-button').classList.toggle('hidden', !isLoggedIn());
     $('#user-label').textContent = isLoggedIn() ? `سلام، ${claim('unique_name', 'name', 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name') || 'همراه عزیز'}` : '';
     $$('.auth-link').forEach(el => el.classList.toggle('hidden', !isLoggedIn()));
-    $('.admin-link').classList.toggle('hidden', !isAdmin()); $('#bookings').classList.toggle('hidden', !isLoggedIn());
-    $('#profile').classList.toggle('hidden', !isLoggedIn()); $('#admin').classList.toggle('hidden', !isAdmin());
+    $('.admin-link')?.classList.toggle('hidden', !isAdmin());
+    $('#admin')?.classList.toggle('hidden', !isAdmin());
+    $('#admin-guest')?.classList.toggle('hidden', isAdmin());
+    $('#bookings')?.classList.toggle('hidden', !isLoggedIn()); $('#profile')?.classList.toggle('hidden', !isLoggedIn());
+    $('#account-guest')?.classList.toggle('hidden', isLoggedIn());
   }
   function renderHotels() {
     const text = $('#hotel-filter').value.trim().toLocaleLowerCase('fa'); const stars = Number($('#star-filter').value || 0);
@@ -67,18 +82,25 @@
       const rooms = state.rooms[h.id] || []; const img = hotelImage(h); const photo = img ? `<img src="${esc(imageUrl(img))}" alt="نمای هتل ${esc(h.name)}" loading="lazy" onerror="this.remove()">` : '';
       return `<article class="hotel-card"><div class="hotel-photo">${photo || '<div class="photo-placeholder">⌂</div>'}<span class="photo-city">${esc(h.city)}، ${esc(h.country)}</span></div><div class="hotel-info"><div class="hotel-title-line"><h3>${esc(h.name)}</h3><span class="rating" aria-label="${esc(h.starRating)} ستاره">${'★'.repeat(Math.max(0, Math.min(5, Number(h.starRating) || 0)))}</span></div><p class="hotel-location">${esc(h.address || h.city)}</p><p class="hotel-description">${esc(h.description || 'برای آشنایی بیشتر با اتاق‌ها و امکانات این اقامتگاه، جزئیات را ببینید.')}</p><div class="hotel-info-bottom"><span class="rooms-count"><strong>${rooms.length.toLocaleString('fa-IR')}</strong> اتاق</span><button class="small-button" data-open-rooms="${h.id}">دیدن اتاق‌ها ←</button></div></div></article>`;
     }).join('');
-    $$('[data-open-rooms]').forEach(button => button.addEventListener('click', () => openRooms(Number(button.dataset.openRooms))));
+    $$('[data-open-rooms]').forEach(button => button.addEventListener('click', () => {
+      const params = new URLSearchParams({ id: button.dataset.openRooms });
+      if ($('#search-checkin')?.value) params.set('checkIn', $('#search-checkin').value);
+      if ($('#search-checkout')?.value) params.set('checkOut', $('#search-checkout').value);
+      if ($('#search-guests')?.value) params.set('guests', $('#search-guests').value);
+      location.href = `/hotel.html?${params}`;
+    }));
   }
   async function loadHotels() {
-    $('#hotel-grid').innerHTML = '<div class="loading-card">در حال دریافت هتل‌ها…</div>';
+    if ($('#hotel-grid')) $('#hotel-grid').innerHTML = '<div class="loading-card">در حال دریافت هتل‌ها…</div>';
     try {
       state.hotels = await request('/api/Hotel') || [];
-      await Promise.all(state.hotels.map(async hotel => { try { state.rooms[hotel.id] = await request(`/api/Hotel/${hotel.id}/rooms`) || []; } catch { state.rooms[hotel.id] = []; } }));
-      renderHotels(); fillHotelSelect(); if (isAdmin()) renderAdminHotels();
-    } catch (error) { $('#hotel-grid').innerHTML = `<div class="empty-state">${esc(error.message)} <button class="small-button" id="retry-hotels">تلاش دوباره</button></div>`; $('#retry-hotels')?.addEventListener('click', loadHotels); }
+      if ($('#hotel-grid') || $('#admin-hotel-list')) await Promise.all(state.hotels.map(async hotel => { try { state.rooms[hotel.id] = await request(`/api/Hotel/${hotel.id}/rooms`) || []; } catch { state.rooms[hotel.id] = []; } }));
+      if ($('#hotel-grid')) renderHotels();
+      fillHotelSelect(); if (isAdmin() && $('#admin-hotel-list')) renderAdminHotels();
+    } catch (error) { if ($('#hotel-grid')) { $('#hotel-grid').innerHTML = `<div class="empty-state">${esc(error.message)} <button class="small-button" id="retry-hotels">تلاش دوباره</button></div>`; $('#retry-hotels')?.addEventListener('click', loadHotels); } else showToast(error.message, true); }
   }
   function fillHotelSelect() {
-    const select = $('#room-hotel-select'); const previous = select.value;
+    const select = $('#room-hotel-select'); if (!select) return; const previous = select.value;
     select.innerHTML = state.hotels.length ? state.hotels.map(h => `<option value="${h.id}">${esc(h.name)} — ${esc(h.city)}</option>`).join('') : '<option value="">ابتدا یک هتل ثبت کنید</option>';
     if (state.hotels.some(h => String(h.id) === previous)) select.value = previous;
   }
@@ -91,27 +113,41 @@
   }
   async function openRooms(hotelId) {
     const hotel = hotelById(hotelId); if (!hotel) return;
-    const selectedCheckIn = $('#search-checkin').value; const selectedCheckOut = $('#search-checkout').value;
-    const dialog = $('#room-dialog'); const content = $('#room-dialog-content');
-    content.innerHTML = `<span class="eyebrow">${esc(hotel.city)} · ${'★'.repeat(Math.min(5, Number(hotel.starRating) || 0))}</span><h2>${esc(hotel.name)}</h2><p class="hotel-location">${esc(hotel.address)}${hotel.phoneNumber ? ` · ${esc(hotel.phoneNumber)}` : ''}</p><p>${esc(hotel.description || '')}</p><div class="stay-picker"><label>تاریخ ورود<input id="room-checkin" type="date" value="${esc(selectedCheckIn)}" required></label><label>تاریخ خروج<input id="room-checkout" type="date" value="${esc(selectedCheckOut)}" required></label><label>تعداد نفرات<select id="room-guests"><option value="1">۱ نفر</option><option value="2">۲ نفر</option><option value="3">۳ نفر</option><option value="4">۴ نفر</option><option value="5">۵ نفر یا بیشتر</option></select></label><button id="check-room-dates" class="button button-accent">بررسی اتاق‌های آزاد</button></div><div class="room-list"><div class="empty-state">تاریخ ورود و خروج را انتخاب کنید، سپس اتاق‌های آزاد را بررسی کنید.</div></div>`;
-    if (!dialog.open) dialog.showModal();
+    const params = new URLSearchParams(location.search);
+    const selectedCheckIn = $('#search-checkin')?.value || params.get('checkIn') || ''; const selectedCheckOut = $('#search-checkout')?.value || params.get('checkOut') || '';
+    const dialog = $('#room-dialog'); const content = $('#room-page-content') || $('#room-dialog-content');
+    content.innerHTML = `<span class="eyebrow">${esc(hotel.city)} · ${'★'.repeat(Math.min(5, Number(hotel.starRating) || 0))}</span><h2>${esc(hotel.name)}</h2>${galleryMarkup(hotel.images, `hotel-${hotel.id}`, `تصاویر هتل ${hotel.name}`)}<p class="hotel-location">${esc(hotel.address)}${hotel.phoneNumber ? ` · ${esc(hotel.phoneNumber)}` : ''}</p><p>${esc(hotel.description || '')}</p><div class="stay-picker"><label>تاریخ ورود<input id="room-checkin" type="date" value="${esc(selectedCheckIn)}" required></label><label>تاریخ خروج<input id="room-checkout" type="date" value="${esc(selectedCheckOut)}" required></label><label>تعداد نفرات<select id="room-guests"><option value="1">۱ نفر</option><option value="2">۲ نفر</option><option value="3">۳ نفر</option><option value="4">۴ نفر</option><option value="5">۵ نفر یا بیشتر</option></select></label><button id="check-room-dates" class="button button-accent">بررسی اتاق‌های آزاد</button></div><h3 class="room-list-title">اتاق‌های این هتل</h3><div class="room-list"><div class="empty-state">در حال دریافت اتاق‌های هتل…</div></div>`;
+    if (dialog && !dialog.open) dialog.showModal();
     try {
-      state.rooms[hotelId] = await request(`/api/Hotel/${hotelId}/rooms`) || []; renderHotels();
+      state.rooms[hotelId] = await request(`/api/Hotel/${hotelId}/rooms`) || [];
+      if ($('#hotel-grid')) renderHotels();
+      renderHotelRoomsBeforeAvailability(hotelId);
       const today = new Date(); const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
       const asInput = date => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
       $('#room-checkin').min = asInput(tomorrow); $('#room-checkout').min = asInput(tomorrow);
-      $('#room-guests').value = $('#search-guests').value;
+      $('#room-guests').value = $('#search-guests')?.value || params.get('guests') || '2';
       $('#room-checkin').addEventListener('change', () => {
         const date = new Date(`${$('#room-checkin').value}T00:00:00`); date.setDate(date.getDate() + 1);
         $('#room-checkout').min = asInput(date);
         if ($('#room-checkout').value <= $('#room-checkin').value) $('#room-checkout').value = '';
+        invalidateRoomAvailability();
       });
+      $('#room-checkout').addEventListener('change', invalidateRoomAvailability);
+      $('#room-guests').addEventListener('change', invalidateRoomAvailability);
       $('#check-room-dates').addEventListener('click', () => searchAvailableRooms(hotelId));
     } catch (error) { content.querySelector('.room-list').innerHTML = `<div class="empty-state">${esc(error.message)}</div>`; }
   }
+  function renderHotelRoomsBeforeAvailability(hotelId) {
+    const rooms = state.rooms[hotelId] || [];
+    const list = $('.room-list');
+    list.innerHTML = rooms.length ? rooms.map(room => {
+      const isMaintenance = String(room.status).toLowerCase() === 'maintenance';
+      return `<article class="room-item room-item-with-gallery">${galleryMarkup(room.images, `room-${room.id}`, `تصاویر اتاق ${room.roomNumber}`)}<div class="room-summary"><strong>اتاق ${Number(room.roomNumber).toLocaleString('fa-IR')} · ${esc(room.roomType || 'اتاق')}</strong><small>ظرفیت ${Number(room.capacity).toLocaleString('fa-IR')} نفر · ${isMaintenance ? 'در حال تعمیر' : 'برای دیدن جزئیات و رزرو، اتاق را انتخاب کنید'}</small><span class="room-price">${price(room.pricePerNight)}<small>هر شب</small></span>${isMaintenance ? '<span class="status-pill">در حال تعمیر</span>' : `<a class="small-button" href="${roomDetailHref(hotelId, room.id, $('#room-checkin').value, $('#room-checkout').value, $('#room-guests').value)}">مشاهدهٔ جزئیات اتاق</a>`}</div></article>`;
+    }).join('') : '<div class="empty-state">برای این هتل هنوز اتاقی ثبت نشده است.</div>';
+  }
   async function searchAvailableRooms(hotelId) {
     const checkIn = $('#room-checkin').value; const checkOut = $('#room-checkout').value;
-    const list = $('#room-dialog-content .room-list');
+    const list = $('.room-list');
     if (!checkIn || !checkOut || checkOut <= checkIn) {
       list.innerHTML = '<div class="empty-state">لطفاً تاریخ ورود و خروج را انتخاب کنید؛ تاریخ خروج باید بعد از ورود باشد.</div>';
       return;
@@ -130,16 +166,73 @@
       } catch (error) { availabilityError = error; return null; }
     }))).filter(Boolean);
     const nights = Math.round((new Date(`${checkOut}T00:00:00`) - new Date(`${checkIn}T00:00:00`)) / 86400000);
-    list.innerHTML = available.length ? available.map(room => `<div class="room-item"><div><strong>اتاق ${Number(room.roomNumber).toLocaleString('fa-IR')} · ${esc(room.roomType || 'اتاق')}</strong><small>ظرفیت ${Number(room.capacity).toLocaleString('fa-IR')} نفر · ${esc(hotel?.name || '')}</small></div><div><div class="room-price">${price(room.pricePerNight)}<small>هر شب · جمع ${price(room.pricePerNight * nights)}</small></div><button class="small-button book-room" data-room="${room.id}" data-hotel="${hotelId}">رزرو این اتاق</button></div></div>`).join('') : `<div class="empty-state">${availabilityError ? esc(availabilityError.message) : 'برای این تاریخ و تعداد نفرات، اتاق آزادی پیدا نشد.'}</div>`;
-    $$('.book-room', list).forEach(button => button.addEventListener('click', () => createBooking(Number(button.dataset.hotel), Number(button.dataset.room))));
+    list.innerHTML = available.length ? available.map(room => `<article class="room-item room-item-with-gallery">${galleryMarkup(room.images, `room-${room.id}`, `تصاویر اتاق ${room.roomNumber}`)}<div class="room-summary"><strong>اتاق ${Number(room.roomNumber).toLocaleString('fa-IR')} · ${esc(room.roomType || 'اتاق')}</strong><small>ظرفیت ${Number(room.capacity).toLocaleString('fa-IR')} نفر · ${esc(hotel?.name || '')}</small><span class="room-price">${price(room.pricePerNight)}<small>هر شب · جمع ${price(room.pricePerNight * nights)}</small></span><a class="small-button" href="${roomDetailHref(hotelId, room.id, checkIn, checkOut, $('#room-guests').value)}">انتخاب اتاق و دیدن جزئیات</a></div></article>`).join('') : `<div class="empty-state">${availabilityError ? esc(availabilityError.message) : 'برای این تاریخ و تعداد نفرات، اتاق آزادی پیدا نشد.'}</div>`;
+  }
+  async function loadRoomDetails(hotelId, roomId) {
+    const content = $('#room-detail-content');
+    if (!hotelId || !roomId) { content.innerHTML = '<div class="empty-state">شناسهٔ هتل یا اتاق معتبر نیست.</div>'; return; }
+    const params = new URLSearchParams(location.search);
+    try {
+      const [hotel, rooms] = await Promise.all([request(`/api/Hotel/${hotelId}`), request(`/api/Hotel/${hotelId}/rooms`)]);
+      const room = (rooms || []).find(item => Number(item.id) === roomId);
+      if (!room || !hotel) { content.innerHTML = '<div class="empty-state">اطلاعات هتل یا اتاق پیدا نشد.</div>'; return; }
+      state.rooms[hotelId] = rooms || [];
+      const checkIn = params.get('checkIn') || '';
+      const checkOut = params.get('checkOut') || '';
+      const guests = params.get('guests') || '2';
+      const hotelUrl = new URLSearchParams({ id: hotelId });
+      if (checkIn) hotelUrl.set('checkIn', checkIn);
+      if (checkOut) hotelUrl.set('checkOut', checkOut);
+      if (guests) hotelUrl.set('guests', guests);
+      $('#room-back-link').href = `/hotel.html?${hotelUrl}`;
+      content.innerHTML = `<span class="eyebrow">جزئیات اتاق · ${esc(hotel.name)}</span><h1>اتاق ${Number(room.roomNumber).toLocaleString('fa-IR')} · ${esc(room.roomType || 'اتاق')}</h1>${galleryMarkup(room.images, `room-detail-${room.id}`, `تصاویر اتاق ${room.roomNumber}`)}<div class="room-detail-meta"><div><span>هتل</span><strong>${esc(hotel.name)}</strong></div><div><span>ظرفیت</span><strong>${Number(room.capacity).toLocaleString('fa-IR')} نفر</strong></div><div><span>قیمت هر شب</span><strong>${price(room.pricePerNight)}</strong></div><div><span>وضعیت</span><strong>${esc(room.status)}</strong></div></div><div class="stay-picker"><label>تاریخ ورود<input id="room-checkin" type="date" value="${esc(checkIn)}" required></label><label>تاریخ خروج<input id="room-checkout" type="date" value="${esc(checkOut)}" required></label><label>تعداد نفرات<select id="room-guests"><option value="1">۱ نفر</option><option value="2">۲ نفر</option><option value="3">۳ نفر</option><option value="4">۴ نفر</option><option value="5">۵ نفر یا بیشتر</option></select></label><button id="check-room-dates" class="button button-accent">بررسی موجودی اتاق</button></div><p id="room-availability-state" class="availability-state" aria-live="polite">تاریخ اقامت را انتخاب و موجودی این اتاق را بررسی کنید.</p><button id="room-book-button" class="button button-dark hidden">رزرو این اتاق</button>`;
+      $('#room-guests').value = guests;
+      const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
+      const asInput = date => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+      $('#room-checkin').min = asInput(tomorrow); $('#room-checkout').min = asInput(tomorrow);
+      $('#room-checkin').addEventListener('change', () => {
+        const date = new Date(`${$('#room-checkin').value}T00:00:00`); date.setDate(date.getDate() + 1);
+        $('#room-checkout').min = asInput(date);
+        if ($('#room-checkout').value <= $('#room-checkin').value) $('#room-checkout').value = '';
+        invalidateRoomAvailability();
+      });
+      $('#room-checkout').addEventListener('change', invalidateRoomAvailability);
+      $('#room-guests').addEventListener('change', invalidateRoomAvailability);
+      $('#check-room-dates').addEventListener('click', () => checkRoomDetailAvailability(hotelId, roomId));
+      $('#room-book-button').addEventListener('click', () => createBooking(hotelId, roomId));
+    } catch (error) { content.innerHTML = `<div class="empty-state">${esc(error.message)}</div>`; }
+  }
+  async function checkRoomDetailAvailability(hotelId, roomId) {
+    const checkIn = $('#room-checkin').value; const checkOut = $('#room-checkout').value;
+    const stateLabel = $('#room-availability-state'); const bookButton = $('#room-book-button');
+    bookButton.classList.add('hidden');
+    if (!checkIn || !checkOut || checkOut <= checkIn) { stateLabel.textContent = 'تاریخ خروج باید بعد از تاریخ ورود باشد.'; stateLabel.classList.add('error'); return; }
+    const room = (state.rooms[hotelId] || []).find(item => Number(item.id) === roomId);
+    if (Number($('#room-guests').value) > Number(room?.capacity || 0)) { stateLabel.textContent = 'ظرفیت این اتاق برای تعداد نفرات انتخاب‌شده کافی نیست.'; stateLabel.classList.add('error'); return; }
+    stateLabel.textContent = 'در حال بررسی موجودی…'; stateLabel.classList.remove('error', 'success');
+    try {
+      const query = `checkInDate=${encodeURIComponent(new Date(`${checkIn}T12:00:00`).toISOString())}&checkOutDate=${encodeURIComponent(new Date(`${checkOut}T12:00:00`).toISOString())}`;
+      const result = await request(`/api/Room/${roomId}/availability?${query}`);
+      if (!result.isAvailable) { stateLabel.textContent = 'این اتاق در تاریخ انتخابی آزاد نیست. تاریخ دیگری را امتحان کنید.'; stateLabel.classList.add('error'); return; }
+      const nights = Math.round((new Date(`${checkOut}T00:00:00`) - new Date(`${checkIn}T00:00:00`)) / 86400000);
+      stateLabel.textContent = `اتاق برای ${nights.toLocaleString('fa-IR')} شب آزاد است. مبلغ کل: ${price(Number(room?.pricePerNight || 0) * nights)}.`;
+      stateLabel.classList.add('success'); bookButton.classList.remove('hidden');
+    } catch (error) { stateLabel.textContent = error.message; stateLabel.classList.add('error'); }
+  }
+  function invalidateRoomAvailability() {
+    $('#room-book-button')?.classList.add('hidden');
+    const label = $('#room-availability-state');
+    if (label) { label.textContent = 'تغییرات ثبت شد؛ موجودی را دوباره بررسی کنید.'; label.classList.remove('success', 'error'); }
   }
   async function createBooking(hotelId, roomId) {
-    if (!isLoggedIn()) { $('#room-dialog').close(); showAuth('login'); showToast('برای ثبت رزرو ابتدا وارد حساب‌تان شوید.'); return; }
+    if (!isLoggedIn()) { $('#room-dialog')?.close(); showAuth('login'); showToast('برای ثبت رزرو ابتدا وارد حساب‌تان شوید.'); return; }
     const checkIn = $('#room-checkin').value; const checkOut = $('#room-checkout').value;
     if (!checkIn || !checkOut || checkOut <= checkIn) { showToast('تاریخ ورود و خروج را درست انتخاب کنید.', true); return; }
     try {
       await request('/api/Booking', { method: 'POST', body: { hotelId, roomId, checkInDate: new Date(`${checkIn}T12:00:00`).toISOString(), checkOutDate: new Date(`${checkOut}T12:00:00`).toISOString() } });
-      $('#room-dialog').close(); showToast('درخواست رزرو ثبت شد؛ پس از تأیید مدیریت، رزرو قطعی می‌شود.');
+      if ($('#room-dialog')) $('#room-dialog').close();
+      showToast('درخواست رزرو ثبت شد؛ پس از تأیید مدیریت، رزرو قطعی می‌شود.');
+      if (document.body.dataset.page === 'hotel') { location.href = '/account.html#bookings'; return; }
       await loadMyBookings(); document.querySelector('#bookings').scrollIntoView({ behavior: 'smooth' });
     } catch (error) { showToast(error.message, true); }
   }
@@ -172,7 +265,9 @@
       const result = await request(`/api/Auth/${mode}`, { method: 'POST', body: mode === 'login' ? { userName: data.username, password: data.password } : { username: data.username, password: data.password, email: data.email, phoneNumber: data.phoneNumber, nationalCode: data.nationalCode } });
       saveSession({ accessToken: result.accessToken, refreshToken: result.refreshToken || '', expiresAt: result.expiresAt });
       $('#auth-dialog').close(); event.currentTarget.reset(); showToast(mode === 'login' ? 'با موفقیت وارد شدید.' : 'حساب شما ساخته شد. خوش آمدید!');
-      updateAuthUI(); loadMyBookings(); loadProfile();
+      updateAuthUI();
+      if (document.body.dataset.page === 'account') { loadMyBookings(); loadProfile(); }
+      if (document.body.dataset.page === 'admin' && isAdmin()) loadAdmin();
     } catch (error) { showToast(error.message, true); }
   }
   async function submitProfile(event) {
@@ -218,16 +313,31 @@
   }
   async function loadAdmin() { await loadHotels(); await loadAdminBookings(); }
   function setupEvents() {
-    $('#auth-button').addEventListener('click', () => showAuth()); $('#logout-button').addEventListener('click', async () => { try { if (session.refreshToken) await request('/api/Auth/signout', { method: 'POST', body: { refreshToken: session.refreshToken } }); } catch { /* Local sign-out still succeeds when the network is unavailable. */ } clearSession(); showToast('از حساب خارج شدید.'); });
-    $('#auth-form').addEventListener('submit', submitAuth); $$('[data-auth-mode]').forEach(button => button.addEventListener('click', () => setAuthMode(button.dataset.authMode))); $$('[data-close]').forEach(button => button.addEventListener('click', () => button.closest('dialog').close()));
-    $('#profile-form').addEventListener('submit', submitProfile); $('#hotel-form').addEventListener('submit', submitHotel); $('#room-form').addEventListener('submit', submitRoom); $('#refresh-bookings').addEventListener('click', loadMyBookings); $('#admin-refresh').addEventListener('click', loadAdmin);
-    $('#hotel-filter').addEventListener('input', renderHotels); $('#star-filter').addEventListener('change', renderHotels);
-    $('#search-button').addEventListener('click', () => { const city = $('#search-city').value.trim(); $('#hotel-filter').value = city; state.dates.checkIn = $('#search-checkin').value; state.dates.checkOut = $('#search-checkout').value; renderHotels(); document.querySelector('#hotels').scrollIntoView({ behavior: 'smooth' }); });
-    $('#menu-toggle').addEventListener('click', () => $('#main-nav').classList.toggle('open')); $$('#main-nav a').forEach(link => link.addEventListener('click', () => $('#main-nav').classList.remove('open')));
+    $('#auth-button')?.addEventListener('click', () => showAuth());
+    $('[data-open-auth]')?.addEventListener('click', () => showAuth());
+    $('#logout-button')?.addEventListener('click', async () => { try { if (session.refreshToken) await request('/api/Auth/signout', { method: 'POST', body: { refreshToken: session.refreshToken } }); } catch { /* Local sign-out still succeeds when the network is unavailable. */ } clearSession(); showToast('از حساب خارج شدید.'); });
+    $('#auth-form')?.addEventListener('submit', submitAuth); $$('[data-auth-mode]').forEach(button => button.addEventListener('click', () => setAuthMode(button.dataset.authMode))); $$('[data-close]').forEach(button => button.addEventListener('click', () => button.closest('dialog').close()));
+    $('#profile-form')?.addEventListener('submit', submitProfile); $('#hotel-form')?.addEventListener('submit', submitHotel); $('#room-form')?.addEventListener('submit', submitRoom); $('#refresh-bookings')?.addEventListener('click', loadMyBookings); $('#admin-refresh')?.addEventListener('click', loadAdmin);
+    $('#hotel-filter')?.addEventListener('input', renderHotels); $('#star-filter')?.addEventListener('change', renderHotels);
+    $('#search-button')?.addEventListener('click', () => { const city = $('#search-city').value.trim(); $('#hotel-filter').value = city; state.dates.checkIn = $('#search-checkin').value; state.dates.checkOut = $('#search-checkout').value; renderHotels(); document.querySelector('#hotels').scrollIntoView({ behavior: 'smooth' }); });
+    $('#menu-toggle')?.addEventListener('click', () => $('#main-nav').classList.toggle('open')); $$('#main-nav a').forEach(link => link.addEventListener('click', () => $('#main-nav')?.classList.remove('open')));
     $$('.admin-tab').forEach(button => button.addEventListener('click', () => { $$('.admin-tab').forEach(b => b.classList.toggle('active', b === button)); $$('.admin-pane').forEach(pane => pane.classList.toggle('hidden', pane.id !== button.dataset.tab)); if (button.dataset.tab === 'admin-bookings') loadAdminBookings(); }));
-    ['#search-checkin', '#search-checkout'].forEach(selector => $(selector).addEventListener('change', () => { state.dates.checkIn = $('#search-checkin').value; state.dates.checkOut = $('#search-checkout').value; }));
+    ['#search-checkin', '#search-checkout'].forEach(selector => $(selector)?.addEventListener('change', () => { state.dates.checkIn = $('#search-checkin').value; state.dates.checkOut = $('#search-checkout').value; }));
+    $('#check-room-dates')?.addEventListener('click', () => searchAvailableRooms(Number(new URLSearchParams(location.search).get('id'))));
+    $('#room-checkin')?.addEventListener('change', () => { const date = new Date(`${$('#room-checkin').value}T00:00:00`); date.setDate(date.getDate() + 1); const min = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`; $('#room-checkout').min = min; if ($('#room-checkout').value <= $('#room-checkin').value) $('#room-checkout').value = ''; });
+    document.addEventListener('click', event => {
+      const thumb = event.target.closest('[data-gallery-image]');
+      if (!thumb) return;
+      const main = document.querySelector(`[data-gallery-target="${thumb.dataset.galleryGroup}"]`);
+      if (main) main.src = thumb.dataset.galleryImage;
+      $$(`[data-gallery-group="${thumb.dataset.galleryGroup}"]`).forEach(item => item.classList.toggle('active', item === thumb));
+    });
   }
-  setDateDefaults(); setupEvents(); updateAuthUI(); loadHotels();
-  if (isLoggedIn()) { loadMyBookings(); loadProfile(); }
-  if (isAdmin()) loadAdminBookings();
+  setupEvents(); updateAuthUI();
+  const page = document.body.dataset.page;
+  if (page === 'home') { setDateDefaults(); loadHotels(); }
+  if (page === 'account' && isLoggedIn()) { loadMyBookings(); loadProfile(); }
+  if (page === 'admin' && isAdmin()) loadAdmin();
+  if (page === 'hotel') { const hotelId = Number(new URLSearchParams(location.search).get('id')); loadHotels().then(() => openRooms(hotelId)); }
+  if (page === 'room') { const params = new URLSearchParams(location.search); loadRoomDetails(Number(params.get('hotelId')), Number(params.get('roomId'))); }
 })();

@@ -61,6 +61,16 @@ namespace HotelBooking.API.Controllers
 
             return Ok(room);
         }
+        [HttpGet("{hotelId}")]
+        public async Task<IActionResult> GetHotelRooms(int hotelId)
+        {
+            var rooms = await _roomService.GetByHotelIdAsync(hotelId);
+            
+            if (rooms == null)
+                return NotFound();
+
+            return Ok(rooms);
+        }
 
         [HttpGet("{id}/availability")]
         public async Task<IActionResult> CheckAvailability(int id, [FromQuery] DateTime checkInDate, [FromQuery] DateTime checkOutDate)
