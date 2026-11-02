@@ -84,10 +84,12 @@ namespace HotelBooking.Infrastructure.Service
             var RT = await _unitOFWork.RefreshToken.GetByTokenAsync(refreshToken);
             if (RT == null)
             {
+                _logger.LogWarning("Logout failed because the refresh token was not found.");
                 throw new UnauthorizedAccessException("Invalid refresh token.");
             }
             RT.IsRevoked = true;
             await _unitOFWork.SaveChangesAsync();
+            _logger.LogInformation("Refresh token {RefreshTokenId} revoked successfully.", RT.Id);
         }
 
         public async Task<LoginResponse> RefreshTokenAsync(string refreshToken)
@@ -95,6 +97,7 @@ namespace HotelBooking.Infrastructure.Service
             var RT = await _unitOFWork.RefreshToken.GetByTokenAsync(refreshToken);
             if (RT  == null)
             {
+                _logger.LogWarning("Refresh token renewal failed because the token was not found.");
                 throw new UnauthorizedAccessException("Invalid refresh token.");
             }
             if (RT.IsRevoked)
@@ -122,6 +125,7 @@ namespace HotelBooking.Infrastructure.Service
             await _unitOFWork.SaveChangesAsync();
             await _unitOFWork.RefreshToken.AddAsync(newRT);
             var accesstoken = _jwtService.GenerateToken(RT.User);
+            _logger.LogInformation("Refresh token renewed for User {UserId}.", RT.UserId);
             return new LoginResponse
             {
                 AccessToken = accesstoken.AccessToken,

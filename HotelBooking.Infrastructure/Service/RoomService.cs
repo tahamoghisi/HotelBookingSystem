@@ -162,10 +162,16 @@ namespace HotelBooking.Infrastructure.Service
         {
             var room = await _unitOFWork.Rooms.GetByRoomIdAsync(roomId);
             if (room == null)
-                throw new KeyNotFoundException("Hotel not found.");
+            {
+                _logger.LogWarning("Cannot add images because Room {RoomId} was not found.", roomId);
+                throw new KeyNotFoundException("Room not found.");
+            }
 
             if (images == null || images.Count == 0)
+            {
+                _logger.LogWarning("Cannot add images to Room {RoomId} because no images were provided.", roomId);
                 throw new ArgumentException("At least one image is required.");
+            }
 
             var roomImages = new List<RoomImage>();
             var hasMainImage = await _unitOFWork.RoomImage.HasMainImageAsync(roomId);
@@ -208,6 +214,8 @@ namespace HotelBooking.Infrastructure.Service
 
             await _unitOFWork.SaveChangesAsync();
 
+            _logger.LogInformation("Added {ImageCount} images to Room {RoomId}.", roomImages.Count, roomId);
+
             return roomImages.Select(x => new RoomImageResponseDTO
             {
                 Id = x.Id,
@@ -218,7 +226,11 @@ namespace HotelBooking.Infrastructure.Service
         public async Task<bool> DeleteRoomImageAsync(int roomId, int imageId)
         {
             var image = await _unitOFWork.RoomImage.GetByIdAsync(roomId, imageId);
-            if (image == null) return false;
+            if (image == null)
+            {
+                _logger.LogWarning("Room image {ImageId} was not found for Room {RoomId}.", imageId, roomId);
+                return false;
+            }
             var wasMain = image.IsMain;
             var filePath = Path.Combine(
             Directory.GetCurrentDirectory(),
@@ -241,14 +253,20 @@ namespace HotelBooking.Infrastructure.Service
                 }
             }
             await _unitOFWork.SaveChangesAsync();
+            _logger.LogInformation("Deleted image {ImageId} from Room {RoomId}.", imageId, roomId);
             return true;
         }
 
         public async Task<bool> SetMainRoomImageAsync(int roomId, int imageId)
         {
             var result = await _unitOFWork.RoomImage.SetMainImageAsync(roomId, imageId);
-            if (result == false) return false;
+            if (result == false)
+            {
+                _logger.LogWarning("Could not set image {ImageId} as the main image for Room {RoomId}.", imageId, roomId);
+                return false;
+            }
             await _unitOFWork.SaveChangesAsync();
+            _logger.LogInformation("Set image {ImageId} as the main image for Room {RoomId}.", imageId, roomId);
             return true;
         }
 
