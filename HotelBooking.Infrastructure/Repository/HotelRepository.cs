@@ -50,6 +50,11 @@ namespace HotelBooking.Infrastructure.Repository
             return await _dbContext.Hotels.Include(h => h.Images).FirstOrDefaultAsync(h => h.Id == hotelId);
         }
 
+        public async Task<Hotel?> GetByAdminUserIdAsync(int userId)
+        {
+            return await _dbContext.Hotels.FirstOrDefaultAsync(h => h.AdminUserId == userId);
+        }
+
         public async Task<bool> HasActiveRoomsAsync(int hotelId)
         {
             return await _dbContext.Rooms

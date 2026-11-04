@@ -5,6 +5,7 @@ using HotelBooking.Application.ServiceInterface;
 using HotelBooking.Infrastructure.Service;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
 
 namespace HotelBooking.API.Controllers
 {
@@ -87,6 +88,14 @@ namespace HotelBooking.API.Controllers
         }
 
         [Authorize(Roles = "Admin")]
+        [HttpPut("{hotelId}/admin")]
+        public async Task<IActionResult> AssignAdmin(int hotelId, [FromBody] AssignHotelAdminRequest request)
+        {
+            var result = await _hotelService.AssignAdminAsync(hotelId, request.UserId);
+            return result ? NoContent() : NotFound();
+        }
+
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
@@ -129,5 +138,11 @@ namespace HotelBooking.API.Controllers
             return Ok(ApiResponse<string>.Ok(
                 "Hotel image set as main successfully."));
         }
+    }
+
+    public class AssignHotelAdminRequest
+    {
+        [Range(1, int.MaxValue)]
+        public int UserId { get; set; }
     }
 }

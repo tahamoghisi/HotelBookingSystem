@@ -161,6 +161,15 @@ namespace HotelBooking.Infrastructure
 
                 entity.Property(h => h.Description)
                     .HasMaxLength(1000);
+
+                entity.HasOne(h => h.AdminUser)
+                    .WithMany()
+                    .HasForeignKey(h => h.AdminUserId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                entity.HasIndex(h => h.AdminUserId)
+                    .IsUnique()
+                    .HasFilter("[AdminUserId] IS NOT NULL");
             });
 
 

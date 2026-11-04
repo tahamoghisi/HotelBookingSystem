@@ -28,7 +28,8 @@ namespace HotelBooking.Domain.Entities
             Confirmed = 1,
             Cancelled = 2,
             Completed = 3,
-            CheckedIn = 4
+            CheckedIn = 4,
+            Rejected = 5
         }
     }
 }

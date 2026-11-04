@@ -12,6 +12,7 @@ namespace HotelBooking.Domain.Interfaces
     {
         Task<List<Hotel>> GetAllHotelsAsync();
         Task<Hotel?> GetByHotelIdAsync(int  hotelId);
+        Task<Hotel?> GetByAdminUserIdAsync(int userId);
         Task<Hotel?> GetByNameAsync(string name);
         Task<IEnumerable<Hotel>> GetByCityAsync(string city);
         Task<IEnumerable<Hotel>> GetByStarRatingAsync(int starRating);

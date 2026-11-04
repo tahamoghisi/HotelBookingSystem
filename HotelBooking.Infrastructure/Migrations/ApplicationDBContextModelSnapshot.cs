@@ -133,6 +133,9 @@ namespace HotelBooking.Infrastructure.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
+                    b.Property<int?>("AdminUserId")
+                        .HasColumnType("int");
+
                     b.Property<string>("City")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -173,6 +176,10 @@ namespace HotelBooking.Infrastructure.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("AdminUserId")
+                        .IsUnique()
+                        .HasFilter("[AdminUserId] IS NOT NULL");
 
                     b.ToTable("Hotels");
                 });
@@ -438,7 +445,14 @@ namespace HotelBooking.Infrastructure.Migrations
 
             modelBuilder.Entity("HotelBooking.Domain.Entities.Hotel", b =>
                 {
+                    b.HasOne("HotelBooking.Domain.Entities.User", "AdminUser")
+                        .WithMany()
+                        .HasForeignKey("AdminUserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("Booking");
+
+                    b.Navigation("AdminUser");
 
                     b.Navigation("Images");
 

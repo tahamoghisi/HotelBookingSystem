@@ -21,6 +21,9 @@ namespace HotelBooking.Domain.Entities
 
         public bool IsActive { get; set; } = true;
 
+        public int? AdminUserId { get; set; }
+        public User? AdminUser { get; set; }
+
 
         // Navigation Properties
         public ICollection<Room> Rooms { get; set; } = new List<Room>();

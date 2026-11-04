@@ -2,7 +2,7 @@
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
   const storeKey = 'hotelyar.session';
-  const state = { hotels: [], rooms: {}, authMode: 'login', dates: { checkIn: '', checkOut: '' }, toastTimer: null };
+  const state = { hotels: [], rooms: {}, users: [], authMode: 'login', dates: { checkIn: '', checkOut: '' }, toastTimer: null };
   const readSession = () => { try { return JSON.parse(localStorage.getItem(storeKey) || '{}'); } catch { return {}; } };
   let session = readSession();
   const saveSession = value => { session = value; localStorage.setItem(storeKey, JSON.stringify(value)); updateAuthUI(); };
@@ -11,6 +11,8 @@
   const claims = () => decodeToken(session.accessToken || '');
   const claim = (...names) => { const c = claims(); for (const name of names) if (c[name]) return c[name]; return ''; };
   const isAdmin = () => String(claim('role', 'http://schemas.microsoft.com/ws/2008/06/identity/claims/role')).toLowerCase() === 'admin';
+  const isHotelAdmin = () => String(claim('role', 'http://schemas.microsoft.com/ws/2008/06/identity/claims/role')).toLowerCase() === 'hoteladmin';
+  const canManageBookings = () => isAdmin() || isHotelAdmin();
   const isLoggedIn = () => !!session.accessToken;
   const showToast = (message, error = false) => { const toast = $('#toast'); toast.textContent = message; toast.classList.toggle('error', error); toast.classList.add('show'); clearTimeout(state.toastTimer); state.toastTimer = setTimeout(() => toast.classList.remove('show'), 3600); };
   const messageFrom = body => {
@@ -67,9 +69,15 @@
     $('#auth-button').classList.toggle('hidden', isLoggedIn()); $('#logout-button').classList.toggle('hidden', !isLoggedIn());
     $('#user-label').textContent = isLoggedIn() ? `سلام، ${claim('unique_name', 'name', 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name') || 'همراه عزیز'}` : '';
     $$('.auth-link').forEach(el => el.classList.toggle('hidden', !isLoggedIn()));
-    $('.admin-link')?.classList.toggle('hidden', !isAdmin());
-    $('#admin')?.classList.toggle('hidden', !isAdmin());
-    $('#admin-guest')?.classList.toggle('hidden', isAdmin());
+    $('.admin-link')?.classList.toggle('hidden', !canManageBookings());
+    $('#admin')?.classList.toggle('hidden', !canManageBookings());
+    $('#admin-guest')?.classList.toggle('hidden', canManageBookings());
+    if ($('#admin-hotels')) {
+      $('#admin-hotels').classList.toggle('hidden', isHotelAdmin());
+      $('[data-tab="admin-hotels"]')?.classList.toggle('hidden', isHotelAdmin());
+      $('#admin-bookings')?.classList.toggle('hidden', isHotelAdmin() ? false : !$('.admin-tab[data-tab="admin-bookings"]')?.classList.contains('active'));
+      $('[data-tab="admin-bookings"]')?.classList.toggle('active', isHotelAdmin());
+    }
     $('#bookings')?.classList.toggle('hidden', !isLoggedIn()); $('#profile')?.classList.toggle('hidden', !isLoggedIn());
     $('#account-guest')?.classList.toggle('hidden', isLoggedIn());
   }
@@ -100,9 +108,35 @@
     } catch (error) { if ($('#hotel-grid')) { $('#hotel-grid').innerHTML = `<div class="empty-state">${esc(error.message)} <button class="small-button" id="retry-hotels">تلاش دوباره</button></div>`; $('#retry-hotels')?.addEventListener('click', loadHotels); } else showToast(error.message, true); }
   }
   function fillHotelSelect() {
-    const select = $('#room-hotel-select'); if (!select) return; const previous = select.value;
-    select.innerHTML = state.hotels.length ? state.hotels.map(h => `<option value="${h.id}">${esc(h.name)} — ${esc(h.city)}</option>`).join('') : '<option value="">ابتدا یک هتل ثبت کنید</option>';
-    if (state.hotels.some(h => String(h.id) === previous)) select.value = previous;
+    const select = $('#room-hotel-select');
+    if (select) {
+      const previous = select.value;
+      select.innerHTML = state.hotels.length ? state.hotels.map(h => `<option value="${h.id}">${esc(h.name)} — ${esc(h.city)}</option>`).join('') : '<option value="">ابتدا یک هتل ثبت کنید</option>';
+      if (state.hotels.some(h => String(h.id) === previous)) select.value = previous;
+    }
+    filterHotelAdminSelect('');
+  }
+  async function loadAdminUsers() {
+    const select = $('#hotel-admin-user');
+    if (!select) return;
+    try {
+      state.users = await request('/api/User') || [];
+      filterHotelAdminUserSelect('');
+    } catch (error) { state.users = []; select.innerHTML = '<option value="">دریافت حساب‌ها ناموفق بود</option>'; showToast(error.message, true); }
+  }
+  function filterHotelAdminSelect(query) {
+    const select = $('#hotel-admin-hotel');
+    if (!select) return;
+    const term = query.trim().toLocaleLowerCase('fa');
+    const matches = state.hotels.filter(h => !term || String(h.name).toLocaleLowerCase('fa').includes(term));
+    select.innerHTML = `<option value="">انتخاب هتل</option>${matches.map(h => `<option value="${h.id}">${esc(h.name)} — ${esc(h.city)}</option>`).join('')}`;
+  }
+  function filterHotelAdminUserSelect(query) {
+    const select = $('#hotel-admin-user');
+    if (!select) return;
+    const term = query.trim().toLocaleLowerCase('fa');
+    const matches = state.users.filter(user => String(user.role).toLowerCase() === 'user' && (!term || String(user.userName).toLocaleLowerCase('fa').includes(term)));
+    select.innerHTML = `<option value="">انتخاب حساب مدیر</option>${matches.map(user => `<option value="${user.id}">${esc(user.userName)}</option>`).join('')}`;
   }
   function setDateDefaults() {
     const today = new Date(); const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
@@ -236,7 +270,7 @@
       await loadMyBookings(); document.querySelector('#bookings').scrollIntoView({ behavior: 'smooth' });
     } catch (error) { showToast(error.message, true); }
   }
-  const bookingStatuses = { Pending: 'در انتظار تأیید مدیر', Confirmed: 'رزرو قطعی', Cancelled: 'لغوشده', Completed: 'تکمیل‌شده', CheckedIn: 'اقامت در حال انجام' };
+  const bookingStatuses = { Pending: 'در انتظار تأیید مدیر', Confirmed: 'رزرو قطعی', Cancelled: 'لغوشده', Rejected: 'ردشده', Completed: 'تکمیل‌شده', CheckedIn: 'اقامت در حال انجام' };
   const statusClass = value => `status-${String(value || '').toLowerCase()}`;
   async function loadMyBookings() {
     if (!isLoggedIn()) return;
@@ -267,7 +301,7 @@
       $('#auth-dialog').close(); event.currentTarget.reset(); showToast(mode === 'login' ? 'با موفقیت وارد شدید.' : 'حساب شما ساخته شد. خوش آمدید!');
       updateAuthUI();
       if (document.body.dataset.page === 'account') { loadMyBookings(); loadProfile(); }
-      if (document.body.dataset.page === 'admin' && isAdmin()) loadAdmin();
+      if (document.body.dataset.page === 'admin' && canManageBookings()) loadAdmin();
     } catch (error) { showToast(error.message, true); }
   }
   async function submitProfile(event) {
@@ -279,6 +313,18 @@
     event.preventDefault(); const data = formObject(event.currentTarget); data.starRating = Number(data.starRating);
     try { await request('/api/Hotel', { method: 'POST', body: data }); event.currentTarget.reset(); event.currentTarget.elements.country.value = 'ایران'; showToast('هتل با موفقیت ثبت شد.'); await loadHotels(); }
     catch (error) { showToast(error.message, true); }
+  }
+  async function submitHotelAdmin(event) {
+    event.preventDefault();
+    const values = formObject(event.currentTarget);
+    if (!values.hotelId || !values.userId) { showToast('هتل و حساب مدیر را انتخاب کنید.', true); return; }
+    try {
+      await request(`/api/Hotel/${Number(values.hotelId)}/admin`, { method: 'PUT', body: { userId: Number(values.userId) } });
+      event.currentTarget.reset();
+      filterHotelAdminSelect('');
+      filterHotelAdminUserSelect('');
+      showToast('مدیر هتل با موفقیت تخصیص داده شد.');
+    } catch (error) { showToast(error.message, true); }
   }
   async function submitRoom(event) {
     event.preventDefault(); const data = formObject(event.currentTarget);
@@ -303,21 +349,25 @@
   async function loadAdminBookings() {
     const rows = $('#admin-booking-rows'); rows.innerHTML = '<tr><td colspan="6">در حال دریافت رزروها…</td></tr>';
     try {
-      const bookings = await request('/api/Booking/get-all') || [];
+      const payload = await request(isHotelAdmin() ? '/api/Booking/managed' : '/api/Booking/get-all');
+      const bookings = isHotelAdmin() ? (payload?.items || []) : (payload || []);
       rows.innerHTML = bookings.map(b => {
-        const next = b.status === 'Pending' ? ['confirm', 'تأیید و قطعی‌کردن رزرو'] : b.status === 'Confirmed' ? ['check-in', 'ثبت ورود'] : b.status === 'CheckedIn' ? ['check-out', 'ثبت خروج'] : null;
-        return `<tr><td>${esc(b.customerName)}<small>${esc(b.customerEmail)}</small></td><td>${esc(b.hotelName)}<small>اتاق ${Number(b.roomNumber).toLocaleString('fa-IR')}</small></td><td>${dateLabel(b.checkInDate)}<small>تا ${dateLabel(b.checkOutDate)}</small></td><td>${price(b.totalPrice)}</td><td><span class="status-pill ${statusClass(b.status)}">${esc(bookingStatuses[b.status] || b.status)}</span></td><td>${next ? `<button class="mini-action" data-booking-action="${next[0]}" data-id="${b.id}">${next[1]}</button>` : ''}${['Pending', 'Confirmed'].includes(b.status) ? `<button class="mini-action danger" data-booking-action="cancel" data-id="${b.id}">لغو</button>` : ''}</td></tr>`;
+        const next = isHotelAdmin() ? null : b.status === 'Pending' ? ['confirm', 'تأیید و قطعی‌کردن رزرو'] : b.status === 'Confirmed' ? ['check-in', 'ثبت ورود'] : b.status === 'CheckedIn' ? ['check-out', 'ثبت خروج'] : null;
+        const actions = isHotelAdmin() && b.status === 'Pending' ? `<button class="mini-action" data-booking-action="confirm" data-id="${b.id}">تأیید</button><button class="mini-action danger" data-booking-action="reject" data-id="${b.id}">عدم تأیید</button>` : `${next ? `<button class="mini-action" data-booking-action="${next[0]}" data-id="${b.id}">${next[1]}</button>` : ''}${['Pending', 'Confirmed'].includes(b.status) ? `<button class="mini-action danger" data-booking-action="cancel" data-id="${b.id}">لغو</button>` : ''}`;
+        return `<tr><td>${esc(b.customerName)}<small>${esc(b.customerEmail)}</small></td><td>${esc(b.hotelName)}<small>اتاق ${Number(b.roomNumber).toLocaleString('fa-IR')}</small></td><td>${dateLabel(b.checkInDate)}<small>تا ${dateLabel(b.checkOutDate)}</small></td><td>${price(b.totalPrice)}</td><td><span class="status-pill ${statusClass(b.status)}">${esc(bookingStatuses[b.status] || b.status)}</span></td><td>${actions}</td></tr>`;
       }).join('') || '<tr><td colspan="6">رزروی ثبت نشده است.</td></tr>';
-      $$('[data-booking-action]', rows).forEach(button => button.addEventListener('click', async () => { const action = button.dataset.bookingAction; const path = action === 'cancel' ? `/api/Booking/${button.dataset.id}` : `/api/Booking/${button.dataset.id}/${action}`; try { await request(path, { method: action === 'cancel' ? 'DELETE' : 'PUT' }); showToast('وضعیت رزرو تغییر کرد.'); loadAdminBookings(); } catch (error) { showToast(error.message, true); } }));
+      $$('[data-booking-action]', rows).forEach(button => button.addEventListener('click', async () => { const action = button.dataset.bookingAction; const path = isHotelAdmin() ? `/api/Booking/managed/${button.dataset.id}/${action}` : action === 'cancel' ? `/api/Booking/${button.dataset.id}` : `/api/Booking/${button.dataset.id}/${action}`; try { await request(path, { method: action === 'cancel' ? 'DELETE' : 'PUT' }); showToast('وضعیت رزرو تغییر کرد.'); loadAdminBookings(); } catch (error) { showToast(error.message, true); } }));
     } catch (error) { rows.innerHTML = `<tr><td colspan="6">${esc(error.message)}</td></tr>`; }
   }
-  async function loadAdmin() { await loadHotels(); await loadAdminBookings(); }
+  async function loadAdmin() { if (isHotelAdmin()) { await loadAdminBookings(); return; } await loadHotels(); await loadAdminUsers(); await loadAdminBookings(); }
   function setupEvents() {
     $('#auth-button')?.addEventListener('click', () => showAuth());
     $('[data-open-auth]')?.addEventListener('click', () => showAuth());
     $('#logout-button')?.addEventListener('click', async () => { try { if (session.refreshToken) await request('/api/Auth/signout', { method: 'POST', body: { refreshToken: session.refreshToken } }); } catch { /* Local sign-out still succeeds when the network is unavailable. */ } clearSession(); showToast('از حساب خارج شدید.'); });
     $('#auth-form')?.addEventListener('submit', submitAuth); $$('[data-auth-mode]').forEach(button => button.addEventListener('click', () => setAuthMode(button.dataset.authMode))); $$('[data-close]').forEach(button => button.addEventListener('click', () => button.closest('dialog').close()));
-    $('#profile-form')?.addEventListener('submit', submitProfile); $('#hotel-form')?.addEventListener('submit', submitHotel); $('#room-form')?.addEventListener('submit', submitRoom); $('#refresh-bookings')?.addEventListener('click', loadMyBookings); $('#admin-refresh')?.addEventListener('click', loadAdmin);
+    $('#profile-form')?.addEventListener('submit', submitProfile); $('#hotel-form')?.addEventListener('submit', submitHotel); $('#hotel-admin-form')?.addEventListener('submit', submitHotelAdmin); $('#room-form')?.addEventListener('submit', submitRoom); $('#refresh-bookings')?.addEventListener('click', loadMyBookings); $('#admin-refresh')?.addEventListener('click', loadAdmin);
+    $('#hotel-admin-hotel-search')?.addEventListener('input', event => { filterHotelAdminSelect(event.currentTarget.value); });
+    $('#hotel-admin-user-search')?.addEventListener('input', event => { filterHotelAdminUserSelect(event.currentTarget.value); });
     $('#hotel-filter')?.addEventListener('input', renderHotels); $('#star-filter')?.addEventListener('change', renderHotels);
     $('#search-button')?.addEventListener('click', () => { const city = $('#search-city').value.trim(); $('#hotel-filter').value = city; state.dates.checkIn = $('#search-checkin').value; state.dates.checkOut = $('#search-checkout').value; renderHotels(); document.querySelector('#hotels').scrollIntoView({ behavior: 'smooth' }); });
     $('#menu-toggle')?.addEventListener('click', () => $('#main-nav').classList.toggle('open')); $$('#main-nav a').forEach(link => link.addEventListener('click', () => $('#main-nav')?.classList.remove('open')));
@@ -337,7 +387,7 @@
   const page = document.body.dataset.page;
   if (page === 'home') { setDateDefaults(); loadHotels(); }
   if (page === 'account' && isLoggedIn()) { loadMyBookings(); loadProfile(); }
-  if (page === 'admin' && isAdmin()) loadAdmin();
+  if (page === 'admin' && canManageBookings()) loadAdmin();
   if (page === 'hotel') { const hotelId = Number(new URLSearchParams(location.search).get('id')); loadHotels().then(() => openRooms(hotelId)); }
   if (page === 'room') { const params = new URLSearchParams(location.search); loadRoomDetails(Number(params.get('hotelId')), Number(params.get('roomId'))); }
 })();

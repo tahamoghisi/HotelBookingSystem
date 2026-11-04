@@ -17,6 +17,7 @@ namespace HotelBooking.Application.DTOs.Hotel
         public string? PhoneNumber { get; set; }
         public string? Email { get; set; }
         public int StarRating { get; set; }
+        public int? AdminUserId { get; set; }
         public string? Description { get; set; }
         public List<HotelImageResponseDTO> Images { get; set; } = new();
     }

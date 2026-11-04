@@ -60,6 +60,32 @@ namespace HotelBooking.API.Controllers
 
             return Ok(result);
         }
+
+        [Authorize(Roles = "HotelAdmin")]
+        [HttpGet("managed")]
+        public async Task<IActionResult> GetManagedBookings(int page = 1, int pageSize = 100, BookingStatus? status = null)
+        {
+            if (page < 1 || pageSize < 1 || pageSize > 100)
+                return BadRequest("Page must be positive and pageSize must be between 1 and 100.");
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            return Ok(await _bookingService.GetPagedForHotelAdminAsync(userId, page, pageSize, status));
+        }
+
+        [Authorize(Roles = "HotelAdmin")]
+        [HttpPut("managed/{id}/confirm")]
+        public async Task<IActionResult> ConfirmManaged(int id)
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            return await _bookingService.ConfirmForHotelAdminAsync(id, userId) ? NoContent() : NotFound();
+        }
+
+        [Authorize(Roles = "HotelAdmin")]
+        [HttpPut("managed/{id}/reject")]
+        public async Task<IActionResult> RejectManaged(int id)
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            return await _bookingService.RejectForHotelAdminAsync(id, userId) ? NoContent() : NotFound();
+        }
         [Authorize(Roles = "Admin")]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)

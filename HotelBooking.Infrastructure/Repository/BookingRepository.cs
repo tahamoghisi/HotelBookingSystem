@@ -77,6 +77,7 @@ namespace HotelBooking.Infrastructure.Repository
             return !await _dbContext.Bookings
                 .AnyAsync(x => x.RoomId == roomId &&
                 x.Status != BookingStatus.Cancelled &&
+                x.Status != BookingStatus.Rejected &&
                checkIn < x.CheckOutDate && checkOut > x.CheckInDate);
         }
         public async Task<bool> HasActiveBookingsAsync(int roomId)
@@ -85,6 +86,7 @@ namespace HotelBooking.Infrastructure.Repository
                     .AnyAsync(x =>
                         x.RoomId == roomId &&
                         x.Status != BookingStatus.Cancelled &&
+                        x.Status != BookingStatus.Rejected &&
                         x.CheckOutDate >= DateTime.Now);
         }
         public async Task<bool> HasCustomerActiveBookingsAsync(int customerId)
@@ -93,6 +95,7 @@ namespace HotelBooking.Infrastructure.Repository
              .AnyAsync(x =>
              x.CustomerId == customerId &&
              x.Status != BookingStatus.Cancelled &&
+             x.Status != BookingStatus.Rejected &&
              x.CheckOutDate >= DateTime.Now);
         }
         public async Task<bool> IsRoomAvailableAsync(int roomId,DateTime checkIn,DateTime checkOut,int? excludeBookingId = null)
@@ -100,6 +103,7 @@ namespace HotelBooking.Infrastructure.Repository
             return !await _dbContext.Bookings.AnyAsync(x =>
                 x.RoomId == roomId &&
                 x.Status != BookingStatus.Cancelled &&
+                x.Status != BookingStatus.Rejected &&
                 x.Id != excludeBookingId &&
                 checkIn < x.CheckOutDate &&
                 checkOut > x.CheckInDate);
@@ -123,7 +127,7 @@ namespace HotelBooking.Infrastructure.Repository
 
         public async Task<IEnumerable<Booking>> GetBookingPagedAsync(int page, int pageSize, int? hotelId, int? customerId, int? roomId, BookingStatus? status)
         {
-            var query = _dbContext.Bookings.AsQueryable();
+            var query = _dbContext.Bookings.Include(b => b.Customer).Include(b => b.Room).Include(b => b.Hotel).AsQueryable();
             if (hotelId != null)
             {
                 query = query.Where(b => b.HotelId == hotelId);
@@ -191,6 +195,7 @@ namespace HotelBooking.Infrastructure.Repository
                 b.RoomId == roomId &&
                 b.Id != currentBookingId &&
                 b.Status != BookingStatus.Cancelled &&
+                b.Status != BookingStatus.Rejected &&
                 b.CheckInDate <= now &&
                 b.CheckOutDate > now);
         }

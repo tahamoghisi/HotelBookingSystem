@@ -32,9 +32,12 @@ namespace HotelBooking.Application.ServiceInterface
             DateTime checkIn,
             DateTime checkOut);
         Task<bool> ConfirmAsync(int bookingId);
+        Task<bool> RejectForHotelAdminAsync(int bookingId, int userId);
+        Task<bool> ConfirmForHotelAdminAsync(int bookingId, int userId);
         Task<bool> CheckInAsync(int bookingId);
         Task<bool> CheckOutAsync(int bookingId);
         Task<PagedResult<BookingResponseDTO>> GetPagedAsync(int page, int pageSize, int? hotelId, int? customerId, int? roomId, BookingStatus? status);
+        Task<PagedResult<BookingResponseDTO>> GetPagedForHotelAdminAsync(int userId, int page, int pageSize, BookingStatus? status);
         Task<PagedResult<BookingResponseDTO>> SearchPagedAsync(int? customerId, int? roomId, BookingStatus? status, DateTime? checkInFrom, DateTime? checkInTo, PaginationRequest pagination, SortingRequest sorting);//صفخه بندی و تعداد کل و مرتب سازی
 
 

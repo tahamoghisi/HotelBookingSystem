@@ -24,6 +24,7 @@ namespace HotelBooking.Application.Mapping.HotelMap
                 Description = hotel.Description,
                 Email = hotel.Email,
                 StarRating = hotel.StarRating,
+                AdminUserId = hotel.AdminUserId,
                 PhoneNumber = hotel.PhoneNumber,
                 Images = hotel.Images.Select(image => new HotelImageResponseDTO
                 {

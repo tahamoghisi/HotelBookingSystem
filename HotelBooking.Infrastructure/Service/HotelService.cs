@@ -97,6 +97,34 @@ namespace HotelBooking.Infrastructure.Service
             _logger.LogInformation("hotel {HotelId} updated successfully", hotel.Id);
             return true;
         }
+
+        public async Task<bool> AssignAdminAsync(int hotelId, int userId)
+        {
+            var hotel = await _unitOFWork.Hotels.GetByIdAsync(hotelId);
+            var user = await _unitOFWork.User.GetByIdAsync(userId);
+            if (hotel == null || user == null)
+                return false;
+            if (user.Role == "Admin")
+                throw new InvalidOperationException("A system administrator cannot be assigned as a hotel administrator.");
+
+            var existingHotel = await _unitOFWork.Hotels.GetByAdminUserIdAsync(userId);
+            if (existingHotel != null && existingHotel.Id != hotelId)
+                throw new InvalidOperationException("This user is already assigned to another hotel.");
+
+            if (hotel.AdminUserId.HasValue && hotel.AdminUserId != userId)
+            {
+                var previousAdmin = await _unitOFWork.User.GetByIdAsync(hotel.AdminUserId.Value);
+                if (previousAdmin?.Role == "HotelAdmin")
+                    previousAdmin.Role = "User";
+            }
+
+            hotel.AdminUserId = userId;
+            user.Role = "HotelAdmin";
+            _unitOFWork.Hotels.Update(hotel);
+            _unitOFWork.User.Update(user);
+            await _unitOFWork.SaveChangesAsync();
+            return true;
+        }
         public async Task<IEnumerable<RoomResponseDTO>> GetHotelRoomsAsync(int hotelId)
         {
             var hotel = await _unitOFWork.Hotels.GetByHotelIdAsync(hotelId);

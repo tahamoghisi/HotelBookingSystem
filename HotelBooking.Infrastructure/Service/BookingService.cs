@@ -348,6 +348,28 @@ namespace HotelBooking.Infrastructure.Service
 
             return true;
         }
+
+        public async Task<bool> ConfirmForHotelAdminAsync(int bookingId, int userId)
+        {
+            var booking = await _unitOFWork.Bookings.GetBookingByIdAsync(bookingId);
+            if (booking?.Hotel?.AdminUserId != userId)
+                return false;
+            return await ConfirmAsync(bookingId);
+        }
+
+        public async Task<bool> RejectForHotelAdminAsync(int bookingId, int userId)
+        {
+            var booking = await _unitOFWork.Bookings.GetBookingByIdAsync(bookingId);
+            if (booking?.Hotel?.AdminUserId != userId)
+                return false;
+            if (booking.Status != BookingStatus.Pending)
+                throw new InvalidOperationException("Only pending bookings can be rejected.");
+
+            booking.Status = BookingStatus.Rejected;
+            _unitOFWork.Bookings.Update(booking);
+            await _unitOFWork.SaveChangesAsync();
+            return true;
+        }
         public async Task<bool> CheckInAsync(int bookingId)
         {
             var booking = await _unitOFWork.Bookings.GetByIdAsync(bookingId);
@@ -470,6 +492,14 @@ namespace HotelBooking.Infrastructure.Service
                 PageSize = pageSize,
                 TotalCount = totalCount
             };
+        }
+
+        public async Task<PagedResult<BookingResponseDTO>> GetPagedForHotelAdminAsync(int userId, int page, int pageSize, BookingStatus? status)
+        {
+            var hotel = await _unitOFWork.Hotels.GetByAdminUserIdAsync(userId);
+            if (hotel == null)
+                return new PagedResult<BookingResponseDTO> { Items = new List<BookingResponseDTO>(), Page = page, PageSize = pageSize, TotalCount = 0 };
+            return await GetPagedAsync(page, pageSize, hotel.Id, null, null, status);
         }
         //صفخه بندی و تعداد کل و مرتب سازی
         public async Task<PagedResult<BookingResponseDTO>> SearchPagedAsync(int? customerId, int? roomId, BookingStatus? status, DateTime? checkInFrom, DateTime? checkInTo, PaginationRequest pagination, SortingRequest sorting)

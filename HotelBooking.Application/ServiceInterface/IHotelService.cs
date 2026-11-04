@@ -21,6 +21,7 @@ namespace HotelBooking.Application.ServiceInterface
         Task<HotelResponseDTO> CreateAsync(CreateHotelDTO dto);
 
         Task<bool> UpdateAsync(int id, UpdateHotelDTO dto);
+        Task<bool> AssignAdminAsync(int hotelId, int userId);
 
         Task<bool> DeleteAsync(int id);
         Task<IEnumerable<RoomResponseDTO>> GetHotelRoomsAsync(int hotelId);

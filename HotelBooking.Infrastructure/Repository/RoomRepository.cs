@@ -7,6 +7,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static HotelBooking.Domain.Entities.Booking;
 using static HotelBooking.Domain.Entities.Room;
 
 namespace HotelBooking.Infrastructure.Repository
@@ -53,7 +54,9 @@ namespace HotelBooking.Infrastructure.Repository
         public async Task<bool> IsRoomAvailableAsync(int roomId,DateTime checkIn,DateTime checkOut)
         {
             return !await _dbContext.Bookings
-                .AnyAsync(b => b.RoomId == roomId && checkIn < b.CheckOutDate && checkOut > b.CheckInDate);
+                .AnyAsync(b => b.RoomId == roomId &&
+                (b.Status == BookingStatus.Pending ||b.Status == BookingStatus.Confirmed) && 
+                checkIn < b.CheckOutDate && checkOut > b.CheckInDate);
         }
 
         public async Task<IEnumerable<Room>> SearchRoomsAsync(int hotelId, int? capacity, decimal? minPrice, decimal? maxPrice)
