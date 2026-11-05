@@ -72,11 +72,12 @@
     $('.admin-link')?.classList.toggle('hidden', !canManageBookings());
     $('#admin')?.classList.toggle('hidden', !canManageBookings());
     $('#admin-guest')?.classList.toggle('hidden', canManageBookings());
-    if ($('#admin-hotels')) {
-      $('#admin-hotels').classList.toggle('hidden', isHotelAdmin());
-      $('[data-tab="admin-hotels"]')?.classList.toggle('hidden', isHotelAdmin());
-      $('#admin-bookings')?.classList.toggle('hidden', isHotelAdmin() ? false : !$('.admin-tab[data-tab="admin-bookings"]')?.classList.contains('active'));
-      $('[data-tab="admin-bookings"]')?.classList.toggle('active', isHotelAdmin());
+    if ($('#admin-create-hotel')) {
+      $$('[data-admin-only]').forEach(tab => tab.classList.toggle('hidden', isHotelAdmin()));
+      if (isHotelAdmin()) {
+        $$('.admin-tab').forEach(tab => { const active = tab.dataset.tab === 'admin-bookings'; tab.classList.toggle('active', active); tab.setAttribute('aria-selected', String(active)); });
+        $$('.admin-pane').forEach(pane => pane.classList.toggle('hidden', pane.id !== 'admin-bookings'));
+      }
     }
     $('#bookings')?.classList.toggle('hidden', !isLoggedIn()); $('#profile')?.classList.toggle('hidden', !isLoggedIn());
     $('#account-guest')?.classList.toggle('hidden', isLoggedIn());
@@ -363,7 +364,9 @@
   function setupEvents() {
     $('#auth-button')?.addEventListener('click', () => showAuth());
     $('[data-open-auth]')?.addEventListener('click', () => showAuth());
-    $('#logout-button')?.addEventListener('click', async () => { try { if (session.refreshToken) await request('/api/Auth/signout', { method: 'POST', body: { refreshToken: session.refreshToken } }); } catch { /* Local sign-out still succeeds when the network is unavailable. */ } clearSession(); showToast('از حساب خارج شدید.'); });
+    $('#logout-button')?.addEventListener('click', () => $('#logout-dialog')?.showModal());
+    $('[data-cancel-logout]')?.addEventListener('click', () => $('#logout-dialog')?.close());
+    $('#confirm-logout')?.addEventListener('click', async () => { $('#logout-dialog')?.close(); try { if (session.refreshToken) await request('/api/Auth/signout', { method: 'POST', body: { refreshToken: session.refreshToken } }); } catch { /* Local sign-out still succeeds when the network is unavailable. */ } clearSession(); showToast('از حساب خارج شدید.'); });
     $('#auth-form')?.addEventListener('submit', submitAuth); $$('[data-auth-mode]').forEach(button => button.addEventListener('click', () => setAuthMode(button.dataset.authMode))); $$('[data-close]').forEach(button => button.addEventListener('click', () => button.closest('dialog').close()));
     $('#profile-form')?.addEventListener('submit', submitProfile); $('#hotel-form')?.addEventListener('submit', submitHotel); $('#hotel-admin-form')?.addEventListener('submit', submitHotelAdmin); $('#room-form')?.addEventListener('submit', submitRoom); $('#refresh-bookings')?.addEventListener('click', loadMyBookings); $('#admin-refresh')?.addEventListener('click', loadAdmin);
     $('#hotel-admin-hotel-search')?.addEventListener('input', event => { filterHotelAdminSelect(event.currentTarget.value); });
@@ -371,7 +374,7 @@
     $('#hotel-filter')?.addEventListener('input', renderHotels); $('#star-filter')?.addEventListener('change', renderHotels);
     $('#search-button')?.addEventListener('click', () => { const city = $('#search-city').value.trim(); $('#hotel-filter').value = city; state.dates.checkIn = $('#search-checkin').value; state.dates.checkOut = $('#search-checkout').value; renderHotels(); document.querySelector('#hotels').scrollIntoView({ behavior: 'smooth' }); });
     $('#menu-toggle')?.addEventListener('click', () => $('#main-nav').classList.toggle('open')); $$('#main-nav a').forEach(link => link.addEventListener('click', () => $('#main-nav')?.classList.remove('open')));
-    $$('.admin-tab').forEach(button => button.addEventListener('click', () => { $$('.admin-tab').forEach(b => b.classList.toggle('active', b === button)); $$('.admin-pane').forEach(pane => pane.classList.toggle('hidden', pane.id !== button.dataset.tab)); if (button.dataset.tab === 'admin-bookings') loadAdminBookings(); }));
+    $$('.admin-tab').forEach(button => button.addEventListener('click', () => { $$('.admin-tab').forEach(b => { const active = b === button; b.classList.toggle('active', active); b.setAttribute('aria-selected', String(active)); }); $$('.admin-pane').forEach(pane => { const active = pane.id === button.dataset.tab; pane.classList.toggle('hidden', !active); pane.hidden = !active; }); if (button.dataset.tab === 'admin-bookings') loadAdminBookings(); }));
     ['#search-checkin', '#search-checkout'].forEach(selector => $(selector)?.addEventListener('change', () => { state.dates.checkIn = $('#search-checkin').value; state.dates.checkOut = $('#search-checkout').value; }));
     $('#check-room-dates')?.addEventListener('click', () => searchAvailableRooms(Number(new URLSearchParams(location.search).get('id'))));
     $('#room-checkin')?.addEventListener('change', () => { const date = new Date(`${$('#room-checkin').value}T00:00:00`); date.setDate(date.getDate() + 1); const min = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`; $('#room-checkout').min = min; if ($('#room-checkout').value <= $('#room-checkin').value) $('#room-checkout').value = ''; });
